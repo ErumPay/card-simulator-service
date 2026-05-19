@@ -18,6 +18,7 @@ import com.erumpay.card_simulator_service.repository.SimulatorCardRepository;
 import com.erumpay.card_simulator_service.repository.SimulatorCardTokenRepository;
 import com.erumpay.card_simulator_service.repository.SimulatorUserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -75,30 +76,35 @@ public class CardTokenService {
                     Category.TOKEN, ResponseType.TOKEN_DUPLICATE);
         }
 
-        // 5. 토큰 생성 + ACTIVE row INSERT
+        // 5. 토큰 생성 + ACTIVE row INSERT (동시성: DB UNIQUE 위반 catch → TOKEN_DUPLICATE)
         String plainToken = RandomStringGenerator.generateUuidV4NoHyphen();
         SimulatorResponseCode rc = responseCodeResolver.resolve(Category.TOKEN, ResponseType.SUCCESS);
-        SimulatorCardToken saved = tokenRepository.save(SimulatorCardToken.builder()
-                .cardId(card.getCardId())
-                .cardCompany(request.cardCompany())
-                .pgId(request.pgId())
-                .issueIdempotencyKey(idempotencyKey)
-                .cardToken(aesCryptoUtil.encrypt(plainToken))
-                .issueResponseCode(rc.getResponseCode())
-                .issueResponseMessage(rc.getResponseMessage())
-                .tokenStatus(TokenStatus.ACTIVE)
-                .build());
+        try {
+            SimulatorCardToken saved = tokenRepository.save(SimulatorCardToken.builder()
+                    .cardId(card.getCardId())
+                    .cardCompany(request.cardCompany())
+                    .pgId(request.pgId())
+                    .issueIdempotencyKey(idempotencyKey)
+                    .cardToken(aesCryptoUtil.encrypt(plainToken))
+                    .issueResponseCode(rc.getResponseCode())
+                    .issueResponseMessage(rc.getResponseMessage())
+                    .tokenStatus(TokenStatus.ACTIVE)
+                    .build());
 
-        return TokenResponse.builder()
-                .pgId(request.pgId())
-                .idempotencyKey(idempotencyKey)
-                .tokenStatus(saved.getTokenStatus())
-                .cardToken(plainToken)
-                .cardCompany(request.cardCompany())
-                .maskedNumber(card.getMaskedNumber())
-                .responseCode(rc.getResponseCode())
-                .responseMessage(rc.getResponseMessage())
-                .build();
+            return TokenResponse.builder()
+                    .pgId(request.pgId())
+                    .idempotencyKey(idempotencyKey)
+                    .tokenStatus(saved.getTokenStatus())
+                    .cardToken(plainToken)
+                    .cardCompany(request.cardCompany())
+                    .maskedNumber(card.getMaskedNumber())
+                    .responseCode(rc.getResponseCode())
+                    .responseMessage(rc.getResponseMessage())
+                    .build();
+        } catch (DataIntegrityViolationException e) {
+            return failureResponse(request.pgId(), idempotencyKey, request.cardCompany(),
+                    Category.TOKEN, ResponseType.TOKEN_DUPLICATE);
+        }
     }
 
     @Transactional(readOnly = true)
