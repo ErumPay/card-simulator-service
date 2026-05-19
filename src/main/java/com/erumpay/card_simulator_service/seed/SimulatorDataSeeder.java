@@ -7,6 +7,7 @@ import com.erumpay.card_simulator_service.entity.SimulatorCard;
 import com.erumpay.card_simulator_service.entity.SimulatorCardProduct;
 import com.erumpay.card_simulator_service.entity.SimulatorConfig;
 import com.erumpay.card_simulator_service.entity.SimulatorResponseCode;
+import com.erumpay.card_simulator_service.entity.SimulatorResponseCode.Category;
 import com.erumpay.card_simulator_service.entity.SimulatorResponseCode.ResponseType;
 import com.erumpay.card_simulator_service.entity.SimulatorUser;
 import com.erumpay.card_simulator_service.repository.SimulatorCardProductRepository;
@@ -66,20 +67,39 @@ public class SimulatorDataSeeder implements CommandLineRunner {
     }
 
     private void seedResponseCodes() {
-        List<SimulatorResponseCode> codes = new ArrayList<>();
-        for (CardCompany company : seedCardCompanies()) {
-            codes.add(responseCode(company, "00", "정상 처리되었습니다.", ResponseType.SUCCESS));
-            codes.add(responseCode(company, "01", "카드 정보가 일치하지 않습니다.", ResponseType.CARD_INVALID_INFO));
-            codes.add(responseCode(company, "02", "비밀번호가 일치하지 않습니다.", ResponseType.CARD_INVALID_PASSWORD));
-            codes.add(responseCode(company, "03", "토큰을 찾을 수 없습니다.", ResponseType.TOKEN_NOT_FOUND));
-            codes.add(responseCode(company, "04", "결제가 거절되었습니다.", ResponseType.PAYMENT_REJECTED));
-        }
+        List<SimulatorResponseCode> codes = List.of(
+                responseCode(Category.TOKEN, "100", "정상 처리되었습니다.", ResponseType.SUCCESS),
+                responseCode(Category.TOKEN, "101", "토큰을 찾을 수 없습니다.", ResponseType.TOKEN_NOT_FOUND),
+                responseCode(Category.TOKEN, "102", "이미 발급된 토큰이 존재합니다.", ResponseType.TOKEN_DUPLICATE),
+
+                responseCode(Category.CARD, "200", "정상 처리되었습니다.", ResponseType.SUCCESS),
+                responseCode(Category.CARD, "201", "분실 신고된 카드입니다.", ResponseType.CARD_LOST),
+                responseCode(Category.CARD, "202", "만료된 카드입니다.", ResponseType.CARD_EXPIRED),
+                responseCode(Category.CARD, "203", "해지된 카드입니다.", ResponseType.CARD_DELETED),
+                responseCode(Category.CARD, "204", "카드 정보가 일치하지 않습니다.", ResponseType.CARD_INVALID_INFO),
+                responseCode(Category.CARD, "205", "비밀번호가 일치하지 않습니다.", ResponseType.CARD_INVALID_PASSWORD),
+
+                responseCode(Category.PAYMENT, "300", "정상 처리되었습니다.", ResponseType.SUCCESS),
+                responseCode(Category.PAYMENT, "301", "한도를 초과했습니다.", ResponseType.PAYMENT_LIMIT_EXCEEDED),
+                responseCode(Category.PAYMENT, "302", "잔액이 부족합니다.", ResponseType.PAYMENT_INSUFFICIENT_BALANCE),
+                responseCode(Category.PAYMENT, "303", "결제가 거절되었습니다.", ResponseType.PAYMENT_REJECTED),
+
+                responseCode(Category.TRANSACTION, "400", "정상 처리되었습니다.", ResponseType.SUCCESS),
+                responseCode(Category.TRANSACTION, "401", "거래를 찾을 수 없습니다.", ResponseType.TRANSACTION_NOT_FOUND),
+                responseCode(Category.TRANSACTION, "402", "이미 처리된 거래입니다.", ResponseType.TRANSACTION_ALREADY_PROCESSED),
+
+                responseCode(Category.USER, "500", "정상 처리되었습니다.", ResponseType.SUCCESS),
+                responseCode(Category.USER, "501", "사용자를 찾을 수 없습니다.", ResponseType.USER_NOT_FOUND),
+                responseCode(Category.USER, "502", "본인 정보가 일치하지 않습니다.", ResponseType.USER_INVALID_INFO),
+
+                responseCode(Category.SYSTEM, "999", "시스템 오류가 발생했습니다.", ResponseType.SYSTEM_ERROR)
+        );
         responseCodeRepository.saveAll(codes);
     }
 
-    private SimulatorResponseCode responseCode(CardCompany company, String code, String message, ResponseType type) {
+    private SimulatorResponseCode responseCode(Category category, String code, String message, ResponseType type) {
         return SimulatorResponseCode.builder()
-                .cardCompany(company)
+                .category(category)
                 .responseCode(code)
                 .responseMessage(message)
                 .responseType(type)
