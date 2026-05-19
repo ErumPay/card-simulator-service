@@ -1,6 +1,5 @@
 package com.erumpay.card_simulator_service.entity;
 
-import com.erumpay.card_simulator_service.common.CardCompany;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -26,8 +25,8 @@ public class SimulatorResponseCode {
     private Long codeId;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "card_company", nullable = false, length = 50)
-    private CardCompany cardCompany;
+    @Column(nullable = false)
+    private Category category;
 
     @Column(name = "response_code", nullable = false, length = 20)
     private String responseCode;
@@ -39,6 +38,10 @@ public class SimulatorResponseCode {
     @Column(name = "response_type", nullable = false)
     private ResponseType responseType;
 
+    public enum Category {
+        TOKEN, CARD, PAYMENT, TRANSACTION, USER, SYSTEM
+    }
+
     public enum ResponseType {
         SUCCESS,
         CARD_LOST, CARD_EXPIRED, CARD_DELETED,
@@ -46,14 +49,14 @@ public class SimulatorResponseCode {
         TOKEN_NOT_FOUND, TOKEN_DUPLICATE,
         PAYMENT_LIMIT_EXCEEDED, PAYMENT_INSUFFICIENT_BALANCE, PAYMENT_REJECTED,
         TRANSACTION_NOT_FOUND, TRANSACTION_ALREADY_PROCESSED,
-        USER_NOT_FOUND,
+        USER_NOT_FOUND, USER_INVALID_INFO,
         SYSTEM_ERROR
     }
 
     @Builder
-    private SimulatorResponseCode(CardCompany cardCompany, String responseCode,
+    private SimulatorResponseCode(Category category, String responseCode,
                                   String responseMessage, ResponseType responseType) {
-        this.cardCompany = cardCompany;
+        this.category = category;
         this.responseCode = responseCode;
         this.responseMessage = responseMessage;
         this.responseType = responseType;
