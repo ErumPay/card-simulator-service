@@ -36,6 +36,9 @@ public class SimulatorConfig {
     @Builder
     private SimulatorConfig(BigDecimal approvalRate, Integer delayMs, String rejectPattern) {
         this.approvalRate = approvalRate;
+        if (delayMs != null && delayMs < 0) {
+            throw new IllegalArgumentException("delayMs must be >= 0");
+        }
         this.delayMs = delayMs == null ? 0 : delayMs;
         this.rejectPattern = rejectPattern;
     }

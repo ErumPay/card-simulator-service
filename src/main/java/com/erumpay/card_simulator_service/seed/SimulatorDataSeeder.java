@@ -150,6 +150,10 @@ public class SimulatorDataSeeder implements CommandLineRunner {
     }
 
     private String toMaskedNumber(String cardNumber) {
+        if (cardNumber == null || cardNumber.length() != 16) {
+            throw new IllegalArgumentException("Card number must be exactly 16 digits, got: "
+                    + (cardNumber == null ? "null" : cardNumber.length()));
+        }
         // 1234-56**-****-7890 형식
         return cardNumber.substring(0, 4) + "-"
                 + cardNumber.substring(4, 6) + "**-****-"

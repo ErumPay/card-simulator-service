@@ -24,4 +24,4 @@ aes:
 
 simulator:
   seed:
-    enabled: ${SIMULATOR_SEED_ENABLED:true}
+    enabled: ${SIMULATOR_SEED_ENABLED:false}
