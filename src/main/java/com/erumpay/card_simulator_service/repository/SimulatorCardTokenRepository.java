@@ -10,4 +10,9 @@ public interface SimulatorCardTokenRepository extends JpaRepository<SimulatorCar
     Optional<SimulatorCardToken> findByIssueIdempotencyKey(String issueIdempotencyKey);
 
     boolean existsByCardIdAndPgIdAndTokenStatus(Long cardId, String pgId, SimulatorCardToken.TokenStatus tokenStatus);
+
+    Optional<SimulatorCardToken> findByCardCompanyAndCardTokenAndTokenStatus(
+            com.erumpay.card_simulator_service.common.CardCompany cardCompany,
+            String cardToken,
+            SimulatorCardToken.TokenStatus tokenStatus);
 }
