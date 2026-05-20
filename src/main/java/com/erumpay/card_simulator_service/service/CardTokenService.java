@@ -4,6 +4,8 @@ import com.erumpay.card_simulator_service.common.AesCryptoUtil;
 import com.erumpay.card_simulator_service.common.CardCompany;
 import com.erumpay.card_simulator_service.common.PasswordHashUtil;
 import com.erumpay.card_simulator_service.common.RandomStringGenerator;
+import com.erumpay.card_simulator_service.dto.TokenDeleteRequest;
+import com.erumpay.card_simulator_service.dto.TokenDeleteResponse;
 import com.erumpay.card_simulator_service.dto.TokenInquireRequest;
 import com.erumpay.card_simulator_service.dto.TokenIssueRequest;
 import com.erumpay.card_simulator_service.dto.TokenResponse;
@@ -105,6 +107,56 @@ public class CardTokenService {
             return failureResponse(request.pgId(), idempotencyKey, request.cardCompany(),
                     Category.TOKEN, ResponseType.TOKEN_DUPLICATE);
         }
+    }
+
+    @Transactional
+    public TokenDeleteResponse delete(String idempotencyKey, TokenDeleteRequest request) {
+        // 1. 멱등성 검사 — delete_idempotency_key로 기존 결과 echo
+        var existing = tokenRepository.findByDeleteIdempotencyKey(idempotencyKey);
+        if (existing.isPresent()) {
+            return toDeleteResponse(existing.get(), idempotencyKey);
+        }
+
+        // 2. card_company + card_token(ECB) 일치 ACTIVE 토큰 조회
+        String encryptedToken = aesCryptoUtil.encrypt(request.cardToken());
+        SimulatorCardToken token = tokenRepository
+                .findByCardCompanyAndCardTokenAndTokenStatus(request.cardCompany(), encryptedToken, TokenStatus.ACTIVE)
+                .orElse(null);
+        if (token == null) {
+            SimulatorResponseCode rc = responseCodeResolver.resolve(Category.TOKEN, ResponseType.TOKEN_NOT_FOUND);
+            return TokenDeleteResponse.builder()
+                    .pgId(request.pgId())
+                    .idempotencyKey(idempotencyKey)
+                    .cardToken(request.cardToken())
+                    .responseCode(rc.getResponseCode())
+                    .responseMessage(rc.getResponseMessage())
+                    .build();
+        }
+
+        // 3. SUCCESS 코드 조회 후 row UPDATE (token_status=DELETED, delete_*)
+        SimulatorResponseCode rc = responseCodeResolver.resolve(Category.TOKEN, ResponseType.SUCCESS);
+        try {
+            token.markDeleted(idempotencyKey, rc.getResponseCode(), rc.getResponseMessage());
+            tokenRepository.flush();
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            // 동시 삭제 요청 → delete_idempotency_key UNIQUE 위반 시 기존 결과 echo
+            var again = tokenRepository.findByDeleteIdempotencyKey(idempotencyKey);
+            if (again.isPresent()) {
+                return toDeleteResponse(again.get(), idempotencyKey);
+            }
+            throw e;
+        }
+        return toDeleteResponse(token, idempotencyKey);
+    }
+
+    private TokenDeleteResponse toDeleteResponse(SimulatorCardToken token, String idempotencyKey) {
+        return TokenDeleteResponse.builder()
+                .pgId(token.getPgId())
+                .idempotencyKey(idempotencyKey)
+                .cardToken(token.getCardToken() == null ? null : aesCryptoUtil.decrypt(token.getCardToken()))
+                .responseCode(token.getDeleteResponseCode())
+                .responseMessage(token.getDeleteResponseMessage())
+                .build();
     }
 
     @Transactional(readOnly = true)

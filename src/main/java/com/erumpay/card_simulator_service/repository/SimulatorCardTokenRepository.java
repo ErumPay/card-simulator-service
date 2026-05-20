@@ -9,6 +9,8 @@ public interface SimulatorCardTokenRepository extends JpaRepository<SimulatorCar
 
     Optional<SimulatorCardToken> findByIssueIdempotencyKey(String issueIdempotencyKey);
 
+    Optional<SimulatorCardToken> findByDeleteIdempotencyKey(String deleteIdempotencyKey);
+
     boolean existsByCardIdAndPgIdAndTokenStatus(Long cardId, String pgId, SimulatorCardToken.TokenStatus tokenStatus);
 
     Optional<SimulatorCardToken> findByCardCompanyAndCardTokenAndTokenStatus(

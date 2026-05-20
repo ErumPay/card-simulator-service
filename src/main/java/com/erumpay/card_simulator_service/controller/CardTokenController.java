@@ -1,5 +1,7 @@
 package com.erumpay.card_simulator_service.controller;
 
+import com.erumpay.card_simulator_service.dto.TokenDeleteRequest;
+import com.erumpay.card_simulator_service.dto.TokenDeleteResponse;
 import com.erumpay.card_simulator_service.dto.TokenInquireRequest;
 import com.erumpay.card_simulator_service.dto.TokenIssueRequest;
 import com.erumpay.card_simulator_service.dto.TokenResponse;
@@ -27,6 +29,13 @@ public class CardTokenController {
             @RequestHeader("Idempotency-Key") @NotBlank String idempotencyKey,
             @RequestBody @Valid TokenIssueRequest request) {
         return cardTokenService.issue(idempotencyKey, request);
+    }
+
+    @PostMapping("/delete")
+    public TokenDeleteResponse delete(
+            @RequestHeader("Idempotency-Key") @NotBlank String idempotencyKey,
+            @RequestBody @Valid TokenDeleteRequest request) {
+        return cardTokenService.delete(idempotencyKey, request);
     }
 
     @PostMapping("/inquire")

@@ -89,4 +89,14 @@ public class SimulatorCardToken {
         this.issueResponseMessage = issueResponseMessage;
         this.tokenStatus = tokenStatus;
     }
+
+    public void markDeleted(String deleteIdempotencyKey, String responseCode, String responseMessage) {
+        if (this.tokenStatus != TokenStatus.ACTIVE) {
+            throw new IllegalStateException("Only ACTIVE tokens can be deleted. current=" + this.tokenStatus);
+        }
+        this.tokenStatus = TokenStatus.DELETED;
+        this.deleteIdempotencyKey = deleteIdempotencyKey;
+        this.deleteResponseCode = responseCode;
+        this.deleteResponseMessage = responseMessage;
+    }
 }
