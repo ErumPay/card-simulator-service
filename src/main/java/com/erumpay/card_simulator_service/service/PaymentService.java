@@ -23,6 +23,8 @@ import com.erumpay.card_simulator_service.repository.SimulatorCardTokenRepositor
 import com.erumpay.card_simulator_service.repository.SimulatorConfigRepository;
 import com.erumpay.card_simulator_service.repository.SimulatorPaymentHistoryRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,8 +53,20 @@ public class PaymentService {
     private final AesCryptoUtil aesCryptoUtil;
     private final SecureRandom random = new SecureRandom();
 
-    @Transactional
+    @Autowired
+    @Lazy
+    private PaymentService self;
+
     public PaymentApproveResponse approve(String idempotencyKey, PaymentApproveRequest request) {
+        // 트랜잭션 종료 후 지연 적용 (트랜잭션 안에서 sleep을 하면 DB 커넥션이 그 시간만큼 점유됨)
+        SimulatorConfig config = loadConfig();
+        PaymentApproveResponse response = self.approveInTransaction(idempotencyKey, request);
+        applyDelay(config);
+        return response;
+    }
+
+    @Transactional
+    public PaymentApproveResponse approveInTransaction(String idempotencyKey, PaymentApproveRequest request) {
         // 1. 멱등성 검사
         var existing = paymentRepository.findByIdempotencyKey(idempotencyKey);
         if (existing.isPresent()) {
@@ -71,9 +85,8 @@ public class PaymentService {
             return approveRejectedWithoutRow(idempotencyKey, request);
         }
 
-        // 4. 시뮬레이션 적용
+        // 4. 시뮬레이션 적용 (지연은 트랜잭션 종료 후 wrapper에서)
         SimulatorConfig config = loadConfig();
-        applyDelay(config);
         boolean approved = simulate(config, card);
 
         // 5. 승인번호 생성 + row INSERT
