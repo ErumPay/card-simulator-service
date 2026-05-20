@@ -31,6 +31,7 @@ import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -79,18 +80,19 @@ public class PaymentService {
         ResponseType resultType = approved ? ResponseType.SUCCESS : ResponseType.PAYMENT_REJECTED;
         SimulatorResponseCode rc = responseCodeResolver.resolve(Category.PAYMENT, resultType);
         LocalDateTime performanceDate = LocalDateTime.now();
-        SimulatorPaymentHistory saved = insertWithUniqueApprovalNumber(SimulatorPaymentHistory.builder()
-                .cardId(card.getCardId())
-                .cardCompany(card.getCardCompany())
-                .pgId(request.pgId())
-                .pgTxnId(request.pgTxnId())
-                .idempotencyKey(idempotencyKey)
-                .paymentStatus(approved ? PaymentStatus.APPROVED : PaymentStatus.FAILED)
-                .originalAmount(request.originalAmount())
-                .approvedAmount(request.approvedAmount())
-                .performanceDate(performanceDate)
-                .responseCode(rc.getResponseCode())
-                .responseMessage(rc.getResponseMessage()));
+        SimulatorPaymentHistory saved = insertWithUniqueApprovalNumber(idempotencyKey,
+                () -> SimulatorPaymentHistory.builder()
+                        .cardId(card.getCardId())
+                        .cardCompany(card.getCardCompany())
+                        .pgId(request.pgId())
+                        .pgTxnId(request.pgTxnId())
+                        .idempotencyKey(idempotencyKey)
+                        .paymentStatus(approved ? PaymentStatus.APPROVED : PaymentStatus.FAILED)
+                        .originalAmount(request.originalAmount())
+                        .approvedAmount(request.approvedAmount())
+                        .performanceDate(performanceDate)
+                        .responseCode(rc.getResponseCode())
+                        .responseMessage(rc.getResponseMessage()));
 
         return toApproveResponse(saved);
     }
@@ -115,28 +117,35 @@ public class PaymentService {
         }
         SimulatorPaymentHistory origin = originOpt.get();
 
-        // 3. 토큰 일치 검증 (card_company + card_token)
+        // 3. 원거래 일관성 검증 (PG 거래 ID, 승인번호)
+        if (!origin.getPgTxnId().equals(request.originPgTxnId())
+                || !origin.getApprovalNumber().equals(request.approvalNumber())) {
+            return cancelFailureResponse(idempotencyKey, request, ResponseType.TRANSACTION_NOT_FOUND);
+        }
+
+        // 4. 토큰 일치 검증 (card_company + card_token)
         SimulatorCardToken token = findActiveToken(request.cardCompany(), request.cardToken());
         if (token == null || !token.getCardId().equals(origin.getCardId())) {
             return cancelFailureResponse(idempotencyKey, request, ResponseType.TRANSACTION_NOT_FOUND);
         }
 
-        // 4. 취소 승인번호 생성 + 취소 row INSERT
+        // 5. 취소 승인번호 생성 + 취소 row INSERT (origin_pg_txn_id는 원거래 값으로 저장)
         SimulatorResponseCode rc = responseCodeResolver.resolve(Category.PAYMENT, ResponseType.SUCCESS);
-        SimulatorPaymentHistory canceled = insertWithUniqueApprovalNumber(SimulatorPaymentHistory.builder()
-                .cardId(origin.getCardId())
-                .cardCompany(origin.getCardCompany())
-                .pgId(origin.getPgId())
-                .pgTxnId(request.pgTxnId())
-                .originPgTxnId(request.originPgTxnId())
-                .idempotencyKey(idempotencyKey)
-                .originIdempotencyKey(request.originIdempotencyKey())
-                .paymentStatus(PaymentStatus.CANCELED)
-                .originalAmount(origin.getOriginalAmount())
-                .approvedAmount(origin.getApprovedAmount())
-                .performanceDate(origin.getPerformanceDate())
-                .responseCode(rc.getResponseCode())
-                .responseMessage(rc.getResponseMessage()));
+        SimulatorPaymentHistory canceled = insertWithUniqueApprovalNumber(idempotencyKey,
+                () -> SimulatorPaymentHistory.builder()
+                        .cardId(origin.getCardId())
+                        .cardCompany(origin.getCardCompany())
+                        .pgId(origin.getPgId())
+                        .pgTxnId(request.pgTxnId())
+                        .originPgTxnId(origin.getPgTxnId())
+                        .idempotencyKey(idempotencyKey)
+                        .originIdempotencyKey(request.originIdempotencyKey())
+                        .paymentStatus(PaymentStatus.CANCELED)
+                        .originalAmount(origin.getOriginalAmount())
+                        .approvedAmount(origin.getApprovedAmount())
+                        .performanceDate(origin.getPerformanceDate())
+                        .responseCode(rc.getResponseCode())
+                        .responseMessage(rc.getResponseMessage()));
 
         return toCancelResponse(canceled);
     }
@@ -174,13 +183,21 @@ public class PaymentService {
                 .orElse(null);
     }
 
-    private SimulatorPaymentHistory insertWithUniqueApprovalNumber(SimulatorPaymentHistory.SimulatorPaymentHistoryBuilder builder) {
+    private SimulatorPaymentHistory insertWithUniqueApprovalNumber(
+            String idempotencyKey,
+            Supplier<SimulatorPaymentHistory.SimulatorPaymentHistoryBuilder> builderSupplier) {
         for (int attempt = 0; attempt < APPROVAL_NUMBER_MAX_RETRY; attempt++) {
             try {
-                return paymentRepository.save(builder
+                return paymentRepository.save(builderSupplier.get()
                         .approvalNumber(RandomStringGenerator.generateHex(APPROVAL_NUMBER_LENGTH))
                         .build());
             } catch (DataIntegrityViolationException e) {
+                // 동시 요청으로 동일 idempotency_key가 먼저 INSERT된 경우 → 기존 row를 echo (멱등성 보장)
+                var existing = paymentRepository.findByIdempotencyKey(idempotencyKey);
+                if (existing.isPresent()) {
+                    return existing.get();
+                }
+                // idempotency_key는 비어있음 → approval_number 충돌로 간주, 다음 시도에서 새 번호로 재발급
                 if (attempt == APPROVAL_NUMBER_MAX_RETRY - 1) {
                     throw e;
                 }
