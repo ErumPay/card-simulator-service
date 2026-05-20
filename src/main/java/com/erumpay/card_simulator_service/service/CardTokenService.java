@@ -114,7 +114,7 @@ public class CardTokenService {
         // 1. 멱등성 검사 — delete_idempotency_key로 기존 결과 echo
         var existing = tokenRepository.findByDeleteIdempotencyKey(idempotencyKey);
         if (existing.isPresent()) {
-            return toDeleteResponse(existing.get(), request.pgId(), idempotencyKey, request.cardToken());
+            return toDeleteResponse(existing.get(), idempotencyKey);
         }
 
         // 2. card_company + card_token(ECB) 일치 ACTIVE 토큰 조회
@@ -142,19 +142,18 @@ public class CardTokenService {
             // 동시 삭제 요청 → delete_idempotency_key UNIQUE 위반 시 기존 결과 echo
             var again = tokenRepository.findByDeleteIdempotencyKey(idempotencyKey);
             if (again.isPresent()) {
-                return toDeleteResponse(again.get(), request.pgId(), idempotencyKey, request.cardToken());
+                return toDeleteResponse(again.get(), idempotencyKey);
             }
             throw e;
         }
-        return toDeleteResponse(token, request.pgId(), idempotencyKey, request.cardToken());
+        return toDeleteResponse(token, idempotencyKey);
     }
 
-    private TokenDeleteResponse toDeleteResponse(SimulatorCardToken token, String pgId,
-                                                 String idempotencyKey, String plainCardToken) {
+    private TokenDeleteResponse toDeleteResponse(SimulatorCardToken token, String idempotencyKey) {
         return TokenDeleteResponse.builder()
-                .pgId(pgId)
+                .pgId(token.getPgId())
                 .idempotencyKey(idempotencyKey)
-                .cardToken(plainCardToken)
+                .cardToken(token.getCardToken() == null ? null : aesCryptoUtil.decrypt(token.getCardToken()))
                 .responseCode(token.getDeleteResponseCode())
                 .responseMessage(token.getDeleteResponseMessage())
                 .build();
