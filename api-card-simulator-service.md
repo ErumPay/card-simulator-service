@@ -44,19 +44,16 @@
 
 1. PG 서버로부터 카드 정보(Body) 및 멱등성 키(`Idempotency-Key` 헤더) 수신
 2. `simulator_card_token`에서 `issue_idempotency_key` 중복 검사
-   - row 존재 + `token_status='ACTIVE'` → 기존 결과 그대로 반환 (멱등 처리)
-   - row 존재 + `token_status IN ('DELETED','FAILED')` → `TRANSACTION_ALREADY_PROCESSED` 응답 (종결된 키, 새 `Idempotency-Key`로 재요청 필요)
+   - row 존재 → 그 row 응답 그대로 반환 (멱등 처리)
    - row 없음 → 신규 발급 진행 (3단계로)
-3. `simulator_card` 기반 카드 유효성 검증
-   - `card_company`, `card_number`(ECB), `expiry_date`(ECB), `cvc`(ECB) 일치
-   - `card_status = 'ACTIVE'`
-   - `password_2digit` 해시 검증 (입력값 + 해당 row의 `card_salt`로 SHA-256 계산하여 DB 저장값과 비교)
-   - `simulator_card.user_id`로 `simulator_user` 조회 → `birth_date`(ECB) 일치 확인
-4. 동일 (card_id, pg_id) ACTIVE 토큰 존재 시 → `TOKEN_DUPLICATE` 응답
+3. `simulator_card` 기반 카드 유효성 검증 (실패 시 응답만 반환, **DB row INSERT 없음**)
+   - `card_company`, `card_number`(ECB), `expiry_date`(ECB), `cvc`(ECB) 일치 + `card_status = 'ACTIVE'` → 실패 시 `(CARD, CARD_INVALID_INFO)`
+   - `password_2digit` 해시 검증 (입력값 + 해당 row의 `card_salt`로 SHA-256 계산하여 DB 저장값과 비교) → 실패 시 `(CARD, CARD_INVALID_PASSWORD)`
+   - `simulator_card.user_id`로 `simulator_user` 조회 → `birth_date`(ECB) 일치 확인 → 실패 시 `(USER, USER_INVALID_INFO)`
+4. 동일 (card_id, pg_id) ACTIVE 토큰 존재 시 → `(TOKEN, TOKEN_DUPLICATE)` 응답
 5. 카드사 토큰 생성 (UUID v4, 하이픈 제외 32자)
-6. `simulator_response_code`에서 응답 코드/메시지 조회 후 `simulator_card_token` row INSERT (`card_id`, `card_company`, `pg_id`, `issue_idempotency_key`, `issue_response_code`, `issue_response_message`)
-   - 성공: `card_token`(ECB 암호화), `token_status='ACTIVE'`
-   - 실패: `card_token=NULL`, `token_status='FAILED'`
+6. `simulator_response_code`에서 `(TOKEN, SUCCESS)` 응답 코드/메시지 조회 후 `simulator_card_token` row INSERT (`card_id`, `card_company`, `pg_id`, `issue_idempotency_key`, `card_token`(ECB 암호화), `issue_response_code`, `issue_response_message`, `token_status='ACTIVE'`)
+   - DB UNIQUE 제약 위반 시 (동시 요청 race condition) → `(TOKEN, TOKEN_DUPLICATE)` 응답
 7. PG 서버에 응답 반환
 
 ### Response Body
@@ -65,7 +62,7 @@
 |--------------------|--------|-------------------|
 | `pg_id`            | String | PG 식별자         |
 | `idempotency_key`  | String | 발급 멱등성 키    |
-| `token_status`     | String | 토큰 상태 (`ACTIVE`/`FAILED`) |
+| `token_status`     | String | 토큰 상태 (성공 시 `ACTIVE`, 검증/중복 실패 시 null) |
 | `card_token`       | String | 카드사 토큰 (성공 시) |
 | `card_company`     | String | 카드사            |
 | `masked_number`    | String | 마스킹 카드번호   |
@@ -101,8 +98,8 @@
 2. `simulator_card_token`에서 `delete_idempotency_key` 중복 검사
    - 존재 시 → 기존 결과 반환 (멱등 처리)
 3. `card_company`, `card_token`(ECB) 일치하는 ACTIVE 토큰 조회
-   - 매칭 row 없음 → `TOKEN_NOT_FOUND` 응답 (이미 삭제되었거나 존재하지 않는 토큰)
-4. `simulator_response_code`에서 응답 코드/메시지 조회 후 row UPDATE (`token_status = 'DELETED'`, `delete_idempotency_key`, `delete_response_code`, `delete_response_message`)
+   - 매칭 row 없음 → `(TOKEN, TOKEN_NOT_FOUND)` 응답 (이미 삭제되었거나 존재하지 않는 토큰)
+4. `simulator_response_code`에서 `(TOKEN, SUCCESS)` 응답 코드/메시지 조회 후 row UPDATE (`token_status = 'DELETED'`, `delete_idempotency_key`, `delete_response_code`, `delete_response_message`)
 5. 응답 반환
 
 ### Response Body
@@ -447,8 +444,8 @@
 1. PG 서버로부터 토큰 조회 요청 수신
 2. `simulator_card_token`에서 `issue_idempotency_key = target_idempotency_key` 조회
 3. 결과 응답 구성
-   - 조회 성공 (해당 row 존재): 토큰 정보 + 응답 코드 반환
-   - 조회 실패 (row 없음): `TOKEN_NOT_FOUND` 응답
+   - 조회 성공 (해당 row 존재): 토큰 정보 + 발급 시점 응답 코드/메시지 반환
+   - 조회 실패 (row 없음): `(TOKEN, TOKEN_NOT_FOUND)` 응답
 4. `masked_number`는 `simulator_card_token.card_id`로 `simulator_card` JOIN하여 가져옴
 
 ### Response Body
@@ -457,7 +454,7 @@
 |--------------------|--------|-----------------------------------|
 | `pg_id`            | String | PG 식별자                         |
 | `idempotency_key`  | String | 발급 멱등성 키                    |
-| `token_status`     | String | 토큰 상태 (`ACTIVE`/`DELETED`/`FAILED`) |
+| `token_status`     | String | 토큰 상태 (`ACTIVE`/`DELETED`, 조회 실패 시 null) |
 | `card_token`       | String | 카드사 토큰 (성공 시)             |
 | `card_company`     | String | 카드사                            |
 | `masked_number`    | String | 마스킹 카드번호                   |

@@ -1,0 +1,283 @@
+package com.erumpay.card_simulator_service.service;
+
+import com.erumpay.card_simulator_service.common.AesCryptoUtil;
+import com.erumpay.card_simulator_service.common.CardCompany;
+import com.erumpay.card_simulator_service.common.RandomStringGenerator;
+import com.erumpay.card_simulator_service.dto.PaymentApproveRequest;
+import com.erumpay.card_simulator_service.dto.PaymentApproveResponse;
+import com.erumpay.card_simulator_service.dto.PaymentCancelRequest;
+import com.erumpay.card_simulator_service.dto.PaymentCancelResponse;
+import com.erumpay.card_simulator_service.dto.PaymentInquireRequest;
+import com.erumpay.card_simulator_service.dto.PaymentInquireResponse;
+import com.erumpay.card_simulator_service.entity.SimulatorCard;
+import com.erumpay.card_simulator_service.entity.SimulatorCardToken;
+import com.erumpay.card_simulator_service.entity.SimulatorCardToken.TokenStatus;
+import com.erumpay.card_simulator_service.entity.SimulatorConfig;
+import com.erumpay.card_simulator_service.entity.SimulatorPaymentHistory;
+import com.erumpay.card_simulator_service.entity.SimulatorPaymentHistory.PaymentStatus;
+import com.erumpay.card_simulator_service.entity.SimulatorResponseCode;
+import com.erumpay.card_simulator_service.entity.SimulatorResponseCode.Category;
+import com.erumpay.card_simulator_service.entity.SimulatorResponseCode.ResponseType;
+import com.erumpay.card_simulator_service.repository.SimulatorCardRepository;
+import com.erumpay.card_simulator_service.repository.SimulatorCardTokenRepository;
+import com.erumpay.card_simulator_service.repository.SimulatorConfigRepository;
+import com.erumpay.card_simulator_service.repository.SimulatorPaymentHistoryRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.security.SecureRandom;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+
+@Service
+@RequiredArgsConstructor
+public class PaymentService {
+
+    private static final DateTimeFormatter TS_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+    private static final int APPROVAL_NUMBER_LENGTH = 8;
+    private static final int APPROVAL_NUMBER_MAX_RETRY = 3;
+
+    private final SimulatorPaymentHistoryRepository paymentRepository;
+    private final SimulatorCardTokenRepository tokenRepository;
+    private final SimulatorCardRepository cardRepository;
+    private final SimulatorConfigRepository configRepository;
+    private final ResponseCodeResolver responseCodeResolver;
+    private final AesCryptoUtil aesCryptoUtil;
+    private final SecureRandom random = new SecureRandom();
+
+    @Transactional
+    public PaymentApproveResponse approve(String idempotencyKey, PaymentApproveRequest request) {
+        // 1. 멱등성 검사
+        var existing = paymentRepository.findByIdempotencyKey(idempotencyKey);
+        if (existing.isPresent()) {
+            return toApproveResponse(existing.get());
+        }
+
+        // 2. 토큰 검증
+        SimulatorCardToken token = findActiveToken(request.cardCompany(), request.cardToken());
+        if (token == null) {
+            return approveRejectedWithoutRow(idempotencyKey, request);
+        }
+
+        // 3. 카드 상태 검증
+        SimulatorCard card = cardRepository.findById(token.getCardId()).orElse(null);
+        if (card == null || card.getCardStatus() != SimulatorCard.CardStatus.ACTIVE) {
+            return approveRejectedWithoutRow(idempotencyKey, request);
+        }
+
+        // 4. 시뮬레이션 적용
+        SimulatorConfig config = loadConfig();
+        applyDelay(config);
+        boolean approved = simulate(config, card);
+
+        // 5. 승인번호 생성 + row INSERT
+        ResponseType resultType = approved ? ResponseType.SUCCESS : ResponseType.PAYMENT_REJECTED;
+        SimulatorResponseCode rc = responseCodeResolver.resolve(Category.PAYMENT, resultType);
+        LocalDateTime performanceDate = LocalDateTime.now();
+        SimulatorPaymentHistory saved = insertWithUniqueApprovalNumber(SimulatorPaymentHistory.builder()
+                .cardId(card.getCardId())
+                .cardCompany(card.getCardCompany())
+                .pgId(request.pgId())
+                .pgTxnId(request.pgTxnId())
+                .idempotencyKey(idempotencyKey)
+                .paymentStatus(approved ? PaymentStatus.APPROVED : PaymentStatus.FAILED)
+                .originalAmount(request.originalAmount())
+                .approvedAmount(request.approvedAmount())
+                .performanceDate(performanceDate)
+                .responseCode(rc.getResponseCode())
+                .responseMessage(rc.getResponseMessage()));
+
+        return toApproveResponse(saved);
+    }
+
+    @Transactional
+    public PaymentCancelResponse cancel(String idempotencyKey, PaymentCancelRequest request) {
+        // 1. 멱등성 검사 (이번 취소건)
+        var existing = paymentRepository.findByIdempotencyKey(idempotencyKey);
+        if (existing.isPresent()) {
+            return toCancelResponse(existing.get());
+        }
+
+        // 2. 원거래 조회 (APPROVED 필수)
+        var originOpt = paymentRepository
+                .findByOriginIdempotencyKeyAndPaymentStatus(request.originIdempotencyKey(), PaymentStatus.APPROVED);
+        if (originOpt.isEmpty()) {
+            originOpt = paymentRepository.findByIdempotencyKey(request.originIdempotencyKey())
+                    .filter(p -> p.getPaymentStatus() == PaymentStatus.APPROVED);
+        }
+        if (originOpt.isEmpty()) {
+            return cancelFailureResponse(idempotencyKey, request, ResponseType.TRANSACTION_NOT_FOUND);
+        }
+        SimulatorPaymentHistory origin = originOpt.get();
+
+        // 3. 토큰 일치 검증 (card_company + card_token)
+        SimulatorCardToken token = findActiveToken(request.cardCompany(), request.cardToken());
+        if (token == null || !token.getCardId().equals(origin.getCardId())) {
+            return cancelFailureResponse(idempotencyKey, request, ResponseType.TRANSACTION_NOT_FOUND);
+        }
+
+        // 4. 취소 승인번호 생성 + 취소 row INSERT
+        SimulatorResponseCode rc = responseCodeResolver.resolve(Category.PAYMENT, ResponseType.SUCCESS);
+        SimulatorPaymentHistory canceled = insertWithUniqueApprovalNumber(SimulatorPaymentHistory.builder()
+                .cardId(origin.getCardId())
+                .cardCompany(origin.getCardCompany())
+                .pgId(origin.getPgId())
+                .pgTxnId(request.pgTxnId())
+                .originPgTxnId(request.originPgTxnId())
+                .idempotencyKey(idempotencyKey)
+                .originIdempotencyKey(request.originIdempotencyKey())
+                .paymentStatus(PaymentStatus.CANCELED)
+                .originalAmount(origin.getOriginalAmount())
+                .approvedAmount(origin.getApprovedAmount())
+                .performanceDate(origin.getPerformanceDate())
+                .responseCode(rc.getResponseCode())
+                .responseMessage(rc.getResponseMessage()));
+
+        return toCancelResponse(canceled);
+    }
+
+    @Transactional(readOnly = true)
+    public PaymentInquireResponse inquire(PaymentInquireRequest request) {
+        var found = paymentRepository.findByIdempotencyKey(request.targetIdempotencyKey());
+        if (found.isEmpty()) {
+            SimulatorResponseCode rc = responseCodeResolver.resolve(Category.TRANSACTION, ResponseType.TRANSACTION_NOT_FOUND);
+            return PaymentInquireResponse.builder()
+                    .idempotencyKey(request.targetIdempotencyKey())
+                    .responseCode(rc.getResponseCode())
+                    .responseMessage(rc.getResponseMessage())
+                    .build();
+        }
+        SimulatorPaymentHistory row = found.get();
+        return PaymentInquireResponse.builder()
+                .pgId(row.getPgId())
+                .idempotencyKey(row.getIdempotencyKey())
+                .pgTxnId(row.getPgTxnId())
+                .paymentStatus(row.getPaymentStatus())
+                .approvalNumber(row.getApprovalNumber())
+                .approvedAt(format(row.getCreatedAt()))
+                .approvedAmount(row.getApprovedAmount())
+                .responseCode(row.getResponseCode())
+                .responseMessage(row.getResponseMessage())
+                .build();
+    }
+
+    private SimulatorCardToken findActiveToken(CardCompany cardCompany, String plainCardToken) {
+        // 토큰 평문은 PG에 발급 시 전달되고, DB에는 ECB 암호화 저장. ECB는 결정적이라 동일 평문→동일 암호문이라 매칭 가능.
+        String encryptedToken = aesCryptoUtil.encrypt(plainCardToken);
+        return tokenRepository
+                .findByCardCompanyAndCardTokenAndTokenStatus(cardCompany, encryptedToken, TokenStatus.ACTIVE)
+                .orElse(null);
+    }
+
+    private SimulatorPaymentHistory insertWithUniqueApprovalNumber(SimulatorPaymentHistory.SimulatorPaymentHistoryBuilder builder) {
+        for (int attempt = 0; attempt < APPROVAL_NUMBER_MAX_RETRY; attempt++) {
+            try {
+                return paymentRepository.save(builder
+                        .approvalNumber(RandomStringGenerator.generateHex(APPROVAL_NUMBER_LENGTH))
+                        .build());
+            } catch (DataIntegrityViolationException e) {
+                if (attempt == APPROVAL_NUMBER_MAX_RETRY - 1) {
+                    throw e;
+                }
+            }
+        }
+        throw new IllegalStateException("approval_number 생성 재시도 실패");
+    }
+
+    private SimulatorConfig loadConfig() {
+        return configRepository.findAll().stream().findFirst().orElse(null);
+    }
+
+    private void applyDelay(SimulatorConfig config) {
+        if (config == null || config.getDelayMs() == null || config.getDelayMs() <= 0) return;
+        try {
+            Thread.sleep(config.getDelayMs());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private boolean simulate(SimulatorConfig config, SimulatorCard card) {
+        if (config == null) return true;
+        String pattern = config.getRejectPattern();
+        if (pattern != null && !pattern.isBlank()) {
+            try {
+                String plainCardNumber = aesCryptoUtil.decrypt(card.getCardNumber());
+                if (Pattern.compile(pattern).matcher(plainCardNumber).matches()) {
+                    return false;
+                }
+            } catch (PatternSyntaxException ignore) {
+                // 잘못된 정규식은 거절 적용하지 않음
+            }
+        }
+        BigDecimal approvalRate = config.getApprovalRate();
+        if (approvalRate == null) return true;
+        double rate = approvalRate.doubleValue();
+        if (rate >= 100.0) return true;
+        if (rate <= 0.0) return false;
+        return random.nextDouble() * 100.0 < rate;
+    }
+
+    private PaymentApproveResponse approveRejectedWithoutRow(String idempotencyKey, PaymentApproveRequest request) {
+        SimulatorResponseCode rc = responseCodeResolver.resolve(Category.PAYMENT, ResponseType.PAYMENT_REJECTED);
+        return PaymentApproveResponse.builder()
+                .pgId(request.pgId())
+                .idempotencyKey(idempotencyKey)
+                .pgTxnId(request.pgTxnId())
+                .paymentStatus(PaymentStatus.FAILED)
+                .approvedAmount(request.approvedAmount())
+                .responseCode(rc.getResponseCode())
+                .responseMessage(rc.getResponseMessage())
+                .build();
+    }
+
+    private PaymentCancelResponse cancelFailureResponse(String idempotencyKey, PaymentCancelRequest request,
+                                                        ResponseType responseType) {
+        SimulatorResponseCode rc = responseCodeResolver.resolve(Category.TRANSACTION, responseType);
+        return PaymentCancelResponse.builder()
+                .pgId(request.pgId())
+                .idempotencyKey(idempotencyKey)
+                .pgTxnId(request.pgTxnId())
+                .approvalNumber(request.approvalNumber())
+                .responseCode(rc.getResponseCode())
+                .responseMessage(rc.getResponseMessage())
+                .build();
+    }
+
+    private PaymentApproveResponse toApproveResponse(SimulatorPaymentHistory row) {
+        return PaymentApproveResponse.builder()
+                .pgId(row.getPgId())
+                .idempotencyKey(row.getIdempotencyKey())
+                .pgTxnId(row.getPgTxnId())
+                .paymentStatus(row.getPaymentStatus())
+                .approvalNumber(row.getApprovalNumber())
+                .approvedAt(format(row.getCreatedAt()))
+                .approvedAmount(row.getApprovedAmount())
+                .responseCode(row.getResponseCode())
+                .responseMessage(row.getResponseMessage())
+                .build();
+    }
+
+    private PaymentCancelResponse toCancelResponse(SimulatorPaymentHistory row) {
+        return PaymentCancelResponse.builder()
+                .pgId(row.getPgId())
+                .idempotencyKey(row.getIdempotencyKey())
+                .pgTxnId(row.getPgTxnId())
+                .paymentStatus(row.getPaymentStatus())
+                .approvalNumber(row.getApprovalNumber())
+                .cancelledAt(format(row.getCreatedAt()))
+                .cancelledAmount(row.getApprovedAmount())
+                .responseCode(row.getResponseCode())
+                .responseMessage(row.getResponseMessage())
+                .build();
+    }
+
+    private String format(LocalDateTime ts) {
+        return ts == null ? null : ts.format(TS_FORMATTER);
+    }
+}
