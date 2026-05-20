@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
-public record PaymentApproveRequest(
+public record PreApprovalRequest(
         @JsonProperty("pg_id") @NotBlank @Size(max = 20) String pgId,
         @JsonProperty("pg_txn_id") @NotNull @Positive Long pgTxnId,
         @JsonProperty("card_company") @NotNull CardCompany cardCompany,
