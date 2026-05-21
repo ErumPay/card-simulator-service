@@ -1,4 +1,4 @@
-package com.erumpay.card_simulator_service.dto;
+package com.erumpay.card_simulator_service.dto.api.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;

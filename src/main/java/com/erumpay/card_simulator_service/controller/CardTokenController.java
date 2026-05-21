@@ -1,10 +1,10 @@
 package com.erumpay.card_simulator_service.controller;
 
-import com.erumpay.card_simulator_service.dto.TokenDeleteRequest;
-import com.erumpay.card_simulator_service.dto.TokenDeleteResponse;
-import com.erumpay.card_simulator_service.dto.TokenInquireRequest;
-import com.erumpay.card_simulator_service.dto.TokenIssueRequest;
-import com.erumpay.card_simulator_service.dto.TokenResponse;
+import com.erumpay.card_simulator_service.dto.api.request.TokenDeleteRequest;
+import com.erumpay.card_simulator_service.dto.api.response.TokenDeleteResponse;
+import com.erumpay.card_simulator_service.dto.api.request.TokenInquireRequest;
+import com.erumpay.card_simulator_service.dto.api.request.TokenIssueRequest;
+import com.erumpay.card_simulator_service.dto.api.response.TokenResponse;
 import com.erumpay.card_simulator_service.service.CardTokenService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;

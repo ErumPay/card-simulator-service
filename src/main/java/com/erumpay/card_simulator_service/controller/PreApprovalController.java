@@ -1,11 +1,11 @@
 package com.erumpay.card_simulator_service.controller;
 
-import com.erumpay.card_simulator_service.dto.PreApprovalCancelRequest;
-import com.erumpay.card_simulator_service.dto.PreApprovalCancelResponse;
-import com.erumpay.card_simulator_service.dto.PreApprovalInquireRequest;
-import com.erumpay.card_simulator_service.dto.PreApprovalInquireResponse;
-import com.erumpay.card_simulator_service.dto.PreApprovalRequest;
-import com.erumpay.card_simulator_service.dto.PreApprovalResponse;
+import com.erumpay.card_simulator_service.dto.api.request.PreApprovalCancelRequest;
+import com.erumpay.card_simulator_service.dto.api.response.PreApprovalCancelResponse;
+import com.erumpay.card_simulator_service.dto.api.request.PreApprovalInquireRequest;
+import com.erumpay.card_simulator_service.dto.api.response.PreApprovalInquireResponse;
+import com.erumpay.card_simulator_service.dto.api.request.PreApprovalRequest;
+import com.erumpay.card_simulator_service.dto.api.response.PreApprovalResponse;
 import com.erumpay.card_simulator_service.service.PreApprovalService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;

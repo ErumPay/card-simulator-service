@@ -1,4 +1,4 @@
-package com.erumpay.card_simulator_service.dto;
+package com.erumpay.card_simulator_service.dto.api.response;
 
 import com.erumpay.card_simulator_service.common.CardCompany;
 import com.erumpay.card_simulator_service.entity.SimulatorCardToken.TokenStatus;
