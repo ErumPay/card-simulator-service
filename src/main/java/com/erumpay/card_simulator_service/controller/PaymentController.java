@@ -1,11 +1,11 @@
 package com.erumpay.card_simulator_service.controller;
 
-import com.erumpay.card_simulator_service.dto.PaymentApproveRequest;
-import com.erumpay.card_simulator_service.dto.PaymentApproveResponse;
-import com.erumpay.card_simulator_service.dto.PaymentCancelRequest;
-import com.erumpay.card_simulator_service.dto.PaymentCancelResponse;
-import com.erumpay.card_simulator_service.dto.PaymentInquireRequest;
-import com.erumpay.card_simulator_service.dto.PaymentInquireResponse;
+import com.erumpay.card_simulator_service.dto.api.request.PaymentApproveRequest;
+import com.erumpay.card_simulator_service.dto.api.response.PaymentApproveResponse;
+import com.erumpay.card_simulator_service.dto.api.request.PaymentCancelRequest;
+import com.erumpay.card_simulator_service.dto.api.response.PaymentCancelResponse;
+import com.erumpay.card_simulator_service.dto.api.request.PaymentInquireRequest;
+import com.erumpay.card_simulator_service.dto.api.response.PaymentInquireResponse;
 import com.erumpay.card_simulator_service.service.PaymentService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;

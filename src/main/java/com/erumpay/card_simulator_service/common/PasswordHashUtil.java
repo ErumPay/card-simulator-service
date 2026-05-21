@@ -5,7 +5,6 @@ import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.Base64;
 
-// SHA-256(plaintext + salt) Base64. 짧은 비밀 값(비밀번호 2자리 등)의 brute-force 방어용.
 public class PasswordHashUtil {
 
     private static final SecureRandom RANDOM = new SecureRandom();
@@ -31,6 +30,8 @@ public class PasswordHashUtil {
     }
 
     public static boolean verify(String plaintext, String saltBase64, String storedHashBase64) {
-        return hash(plaintext, saltBase64).equals(storedHashBase64);
+        byte[] computed = Base64.getDecoder().decode(hash(plaintext, saltBase64));
+        byte[] stored = Base64.getDecoder().decode(storedHashBase64);
+        return MessageDigest.isEqual(computed, stored);
     }
 }

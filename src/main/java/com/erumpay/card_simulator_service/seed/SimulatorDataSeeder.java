@@ -138,17 +138,17 @@ public class SimulatorDataSeeder implements CommandLineRunner {
     }
 
     private void seedCards(List<SimulatorUser> users, Map<CardCompany, SimulatorCardProduct> products) {
-        // 사용자별 카드사 3개씩 배분 (총 9장)
+        // 사용자별 카드사 3개씩 배분 (총 9장) — mock BIN 체계 80~88 정합
         List<SimulatorCard> cards = new ArrayList<>();
-        cards.addAll(cardsForUser(users.get(0), products, "1234561234567890", CardCompany.SHINHAN));
-        cards.addAll(cardsForUser(users.get(0), products, "2345671234567890", CardCompany.SAMSUNG));
-        cards.addAll(cardsForUser(users.get(0), products, "3456781234567890", CardCompany.HYUNDAI));
-        cards.addAll(cardsForUser(users.get(1), products, "4567891234567890", CardCompany.KB));
-        cards.addAll(cardsForUser(users.get(1), products, "5678901234567890", CardCompany.LOTTE));
-        cards.addAll(cardsForUser(users.get(1), products, "6789011234567890", CardCompany.WOORI));
-        cards.addAll(cardsForUser(users.get(2), products, "7890121234567890", CardCompany.HANA));
-        cards.addAll(cardsForUser(users.get(2), products, "8901231234567890", CardCompany.NH));
-        cards.addAll(cardsForUser(users.get(2), products, "9012341234567890", CardCompany.BC));
+        cards.addAll(cardsForUser(users.get(0), products, "8000001234567890", CardCompany.SAMSUNG));
+        cards.addAll(cardsForUser(users.get(0), products, "8100001234567890", CardCompany.SHINHAN));
+        cards.addAll(cardsForUser(users.get(0), products, "8200001234567890", CardCompany.HYUNDAI));
+        cards.addAll(cardsForUser(users.get(1), products, "8300001234567890", CardCompany.KB));
+        cards.addAll(cardsForUser(users.get(1), products, "8400001234567890", CardCompany.LOTTE));
+        cards.addAll(cardsForUser(users.get(1), products, "8500001234567890", CardCompany.WOORI));
+        cards.addAll(cardsForUser(users.get(2), products, "8600001234567890", CardCompany.HANA));
+        cards.addAll(cardsForUser(users.get(2), products, "8700001234567890", CardCompany.NH));
+        cards.addAll(cardsForUser(users.get(2), products, "8800001234567890", CardCompany.IBK));
         cardRepository.saveAll(cards);
     }
 
@@ -182,9 +182,9 @@ public class SimulatorDataSeeder implements CommandLineRunner {
 
     private List<CardCompany> seedCardCompanies() {
         return List.of(
-                CardCompany.SHINHAN, CardCompany.SAMSUNG, CardCompany.HYUNDAI,
+                CardCompany.SAMSUNG, CardCompany.SHINHAN, CardCompany.HYUNDAI,
                 CardCompany.KB, CardCompany.LOTTE, CardCompany.WOORI,
-                CardCompany.HANA, CardCompany.NH, CardCompany.BC
+                CardCompany.HANA, CardCompany.NH, CardCompany.IBK
         );
     }
 }

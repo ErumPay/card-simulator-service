@@ -1,11 +1,11 @@
-package com.erumpay.card_simulator_service.dto;
+package com.erumpay.card_simulator_service.dto.api.response;
 
 import com.erumpay.card_simulator_service.entity.SimulatorPaymentHistory.PaymentStatus;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 
 @Builder
-public record PaymentApproveResponse(
+public record PaymentInquireResponse(
         @JsonProperty("pg_id") String pgId,
         @JsonProperty("idempotency_key") String idempotencyKey,
         @JsonProperty("pg_txn_id") Long pgTxnId,

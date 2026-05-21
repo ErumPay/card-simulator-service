@@ -35,7 +35,6 @@ public class SimulatorCard {
     @Column(name = "product_id", nullable = false)
     private Long productId;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "card_company", nullable = false, length = 50)
     private CardCompany cardCompany;
 

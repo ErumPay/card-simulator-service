@@ -32,7 +32,6 @@ public class SimulatorPreApproval {
     @Column(name = "card_id", nullable = false)
     private Long cardId;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "card_company", nullable = false, length = 50)
     private CardCompany cardCompany;
 

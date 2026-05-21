@@ -1,4 +1,4 @@
-package com.erumpay.card_simulator_service.dto;
+package com.erumpay.card_simulator_service.dto.api.request;
 
 import com.erumpay.card_simulator_service.common.CardCompany;
 import com.fasterxml.jackson.annotation.JsonProperty;

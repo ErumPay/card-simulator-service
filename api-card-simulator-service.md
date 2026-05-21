@@ -40,6 +40,18 @@
 | `password_2digit` | String | Y    | 비밀번호 앞 두 자리           |
 | `birth_date`      | String | Y    | 생년월일 (YYMMDD)             |
 
+```json
+{
+  "pg_id": "001",
+  "card_company": "SAMSUNG",
+  "card_number": "5511223344556677",
+  "expiry_date": "2912",
+  "cvc": "123",
+  "password_2digit": "01",
+  "birth_date": "900101"
+}
+```
+
 ### Logic
 
 1. PG 서버로부터 카드 정보(Body) 및 멱등성 키(`Idempotency-Key` 헤더) 수신
@@ -69,6 +81,19 @@
 | `response_code`    | String | 카드사 응답코드   |
 | `response_message` | String | 카드사 응답메시지 |
 
+```json
+{
+  "pg_id": "001",
+  "idempotency_key": "001-ISS-20260520153045-5f8a3b9c2d6e1f4a7b0c5d8e3",
+  "token_status": "ACTIVE",
+  "card_token": "9f8e7d6c5b4a3210fedcba9876543210",
+  "card_company": "삼성카드",
+  "masked_number": "551122******6677",
+  "response_code": "S0000",
+  "response_message": "정상 처리되었습니다"
+}
+```
+
 ---
 
 ## 2. 카드사 토큰 삭제
@@ -92,6 +117,14 @@
 | `card_company`    | String | Y    | 카드사             |
 | `card_token`      | String | Y    | 카드사 토큰        |
 
+```json
+{
+  "pg_id": "001",
+  "card_company": "SAMSUNG",
+  "card_token": "9f8e7d6c5b4a3210fedcba9876543210"
+}
+```
+
 ### Logic
 
 1. PG 서버로부터 토큰 삭제 요청 수신 (`Idempotency-Key` 헤더 포함)
@@ -111,6 +144,16 @@
 | `card_token`       | String | 카드사 토큰       |
 | `response_code`    | String | 카드사 응답코드   |
 | `response_message` | String | 카드사 응답메시지 |
+
+```json
+{
+  "pg_id": "001",
+  "idempotency_key": "001-DEL-20260520153100-7c2b8a1d4e5f6g7h8i9j0k1l2",
+  "card_token": "9f8e7d6c5b4a3210fedcba9876543210",
+  "response_code": "S0000",
+  "response_message": "정상 처리되었습니다"
+}
+```
 
 ---
 
@@ -137,6 +180,17 @@
 | `card_token`      | String | Y    | 카드사 토큰           |
 | `original_amount` | Long   | Y    | 원금액                |
 | `approved_amount` | Long   | Y    | 실결제 금액           |
+
+```json
+{
+  "pg_id": "001",
+  "pg_txn_id": 99012345,
+  "card_company": "SAMSUNG",
+  "card_token": "9f8e7d6c5b4a3210fedcba9876543210",
+  "original_amount": 10000,
+  "approved_amount": 10000
+}
+```
 
 ### Logic
 
@@ -170,6 +224,20 @@
 | `response_code`    | String | 카드사 응답코드   |
 | `response_message` | String | 카드사 응답메시지 |
 
+```json
+{
+  "pg_id": "001",
+  "idempotency_key": "001-PAY-20260520153200-3a4b5c6d7e8f9a0b1c2d3e4f5",
+  "pg_txn_id": 99012345,
+  "payment_status": "APPROVED",
+  "approval_number": "a1b2c3d4",
+  "approved_at": "20260520153200",
+  "approved_amount": 10000,
+  "response_code": "S0000",
+  "response_message": "정상 승인되었습니다"
+}
+```
+
 ---
 
 ## 4. 결제 취소
@@ -196,6 +264,18 @@
 | `card_company`           | String | Y    | 카드사                     |
 | `card_token`             | String | Y    | 카드사 토큰                |
 | `approval_number`        | String | Y    | 원거래 승인번호            |
+
+```json
+{
+  "pg_id": "001",
+  "origin_idempotency_key": "001-PAY-20260520153200-3a4b5c6d7e8f9a0b1c2d3e4f5",
+  "pg_txn_id": 99012999,
+  "origin_pg_txn_id": 99012345,
+  "card_company": "SAMSUNG",
+  "card_token": "9f8e7d6c5b4a3210fedcba9876543210",
+  "approval_number": "a1b2c3d4"
+}
+```
 
 ### Logic
 
@@ -224,6 +304,20 @@
 | `response_code`    | String | 카드사 응답코드   |
 | `response_message` | String | 카드사 응답메시지 |
 
+```json
+{
+  "pg_id": "001",
+  "idempotency_key": "001-CNL-20260520154000-6d7e8f9a0b1c2d3e4f5a6b7c8",
+  "pg_txn_id": 99012999,
+  "payment_status": "CANCELED",
+  "approval_number": "e5f6g7h8",
+  "cancelled_at": "20260520154000",
+  "cancelled_amount": 10000,
+  "response_code": "S0000",
+  "response_message": "정상 취소되었습니다"
+}
+```
+
 ---
 
 ## 5. 가승인
@@ -249,6 +343,17 @@
 | `card_token`      | String | Y    | 카드사 토큰           |
 | `original_amount` | Long   | Y    | 원금액                |
 | `approved_amount` | Long   | Y    | 실가승인 금액         |
+
+```json
+{
+  "pg_id": "001",
+  "pg_txn_id": 99055111,
+  "card_company": "SAMSUNG",
+  "card_token": "9f8e7d6c5b4a3210fedcba9876543210",
+  "original_amount": 30000,
+  "approved_amount": 30000
+}
+```
 
 ### Logic
 
@@ -281,6 +386,21 @@
 | `response_code`       | String | 카드사 응답코드   |
 | `response_message`    | String | 카드사 응답메시지 |
 
+```json
+{
+  "pg_id": "001",
+  "idempotency_key": "001-PRE-20260520155000-9a0b1c2d3e4f5a6b7c8d9e0f1",
+  "pg_txn_id": 99055111,
+  "pre_approval_status": "AUTHORIZED",
+  "pre_approval_id": 1001,
+  "pre_approval_number": "b2c3d4e5",
+  "pre_approved_at": "20260520155000",
+  "approved_amount": 30000,
+  "response_code": "S0000",
+  "response_message": "가승인 정상 처리되었습니다"
+}
+```
+
 ---
 
 ## 6. 가승인 취소
@@ -308,6 +428,18 @@
 | `card_token`             | String | Y    | 카드사 토큰                |
 | `pre_approval_number`    | String | Y    | 원 가승인 승인번호         |
 
+```json
+{
+  "pg_id": "001",
+  "origin_idempotency_key": "001-PRE-20260520155000-9a0b1c2d3e4f5a6b7c8d9e0f1",
+  "pg_txn_id": 99055999,
+  "origin_pg_txn_id": 99055111,
+  "card_company": "SAMSUNG",
+  "card_token": "9f8e7d6c5b4a3210fedcba9876543210",
+  "pre_approval_number": "b2c3d4e5"
+}
+```
+
 ### Logic
 
 1. PG 서버로부터 가승인 취소 요청 수신 (`Idempotency-Key` 헤더 포함)
@@ -334,6 +466,19 @@
 | `response_code`       | String | 카드사 응답코드   |
 | `response_message`    | String | 카드사 응답메시지 |
 
+```json
+{
+  "pg_id": "001",
+  "idempotency_key": "001-PRC-20260520160000-2b3c4d5e6f7a8b9c0d1e2f3a4",
+  "pg_txn_id": 99055999,
+  "pre_approval_status": "CANCELED",
+  "pre_approval_number": "b2c3d4e5",
+  "cancelled_at": "20260520160000",
+  "response_code": "S0000",
+  "response_message": "가승인 정상 취소되었습니다"
+}
+```
+
 ---
 
 ## 7. 결제 거래 조회
@@ -353,6 +498,12 @@
 | 필드                     | 타입   | 필수 | 설명                      |
 |--------------------------|--------|------|---------------------------|
 | `target_idempotency_key` | String | Y    | 조회 대상 결제 거래 멱등성 키 |
+
+```json
+{
+  "target_idempotency_key": "001-PAY-20260520153200-3a4b5c6d7e8f9a0b1c2d3e4f5"
+}
+```
 
 ### Logic
 
@@ -376,6 +527,20 @@
 | `response_code`    | String | 카드사 응답코드   |
 | `response_message` | String | 카드사 응답메시지 |
 
+```json
+{
+  "pg_id": "001",
+  "idempotency_key": "001-PAY-20260520153200-3a4b5c6d7e8f9a0b1c2d3e4f5",
+  "pg_txn_id": 99012345,
+  "payment_status": "APPROVED",
+  "approval_number": "a1b2c3d4",
+  "approved_at": "20260520153200",
+  "approved_amount": 10000,
+  "response_code": "S0000",
+  "response_message": "정상 승인되었습니다"
+}
+```
+
 ---
 
 ## 8. 가승인 거래 조회
@@ -395,6 +560,12 @@
 | 필드                     | 타입   | 필수 | 설명                      |
 |--------------------------|--------|------|---------------------------|
 | `target_idempotency_key` | String | Y    | 조회 대상 가승인 멱등성 키 |
+
+```json
+{
+  "target_idempotency_key": "001-PRE-20260520155000-9a0b1c2d3e4f5a6b7c8d9e0f1"
+}
+```
 
 ### Logic
 
@@ -419,6 +590,21 @@
 | `response_code`       | String | 카드사 응답코드   |
 | `response_message`    | String | 카드사 응답메시지 |
 
+```json
+{
+  "pg_id": "001",
+  "idempotency_key": "001-PRE-20260520155000-9a0b1c2d3e4f5a6b7c8d9e0f1",
+  "pg_txn_id": 99055111,
+  "pre_approval_status": "AUTHORIZED",
+  "pre_approval_id": 1001,
+  "pre_approval_number": "b2c3d4e5",
+  "pre_approved_at": "20260520155000",
+  "approved_amount": 30000,
+  "response_code": "S0000",
+  "response_message": "가승인 정상 처리되었습니다"
+}
+```
+
 ---
 
 ## 9. 카드사 토큰 조회
@@ -438,6 +624,12 @@
 | 필드                     | 타입   | 필수 | 설명                       |
 |--------------------------|--------|------|----------------------------|
 | `target_idempotency_key` | String | Y    | 조회 대상 발급 멱등성 키   |
+
+```json
+{
+  "target_idempotency_key": "001-ISS-20260520153045-5f8a3b9c2d6e1f4a7b0c5d8e3"
+}
+```
 
 ### Logic
 
@@ -460,6 +652,19 @@
 | `masked_number`    | String | 마스킹 카드번호                   |
 | `response_code`    | String | 카드사 응답코드                   |
 | `response_message` | String | 카드사 응답메시지                 |
+
+```json
+{
+  "pg_id": "001",
+  "idempotency_key": "001-ISS-20260520153045-5f8a3b9c2d6e1f4a7b0c5d8e3",
+  "token_status": "ACTIVE",
+  "card_token": "9f8e7d6c5b4a3210fedcba9876543210",
+  "card_company": "삼성카드",
+  "masked_number": "551122******6677",
+  "response_code": "S0000",
+  "response_message": "정상 처리되었습니다"
+}
+```
 
 ---
 
