@@ -495,12 +495,16 @@
 
 ### Request Body
 
-| 필드                     | 타입   | 필수 | 설명                      |
-|--------------------------|--------|------|---------------------------|
+| 필드                     | 타입   | 필수 | 설명                          |
+|--------------------------|--------|------|-------------------------------|
+| `pg_id`                  | String | Y    | PG 식별자 (예: "001")         |
+| `card_company`           | String | Y    | 카드사 (영문 enum name)       |
 | `target_idempotency_key` | String | Y    | 조회 대상 결제 거래 멱등성 키 |
 
 ```json
 {
+  "pg_id": "001",
+  "card_company": "SAMSUNG",
   "target_idempotency_key": "001-PAY-20260520153200-3a4b5c6d7e8f9a0b1c2d3e4f5"
 }
 ```
@@ -508,7 +512,8 @@
 ### Logic
 
 1. PG 서버로부터 조회 요청 수신
-2. `simulator_payment_history`에서 `idempotency_key = target_idempotency_key` 조회
+2. `simulator_payment_history`에서 `pg_id`, `card_company`, `idempotency_key = target_idempotency_key` 일치하는 row 조회
+   - 카드사는 실제로 서로 독립된 시스템이므로, 본인의 PG/카드사 영역 외 거래는 조회되지 않음 (시뮬레이터에서도 동일 가정)
 3. 결과 응답 구성
    - 조회 성공: 결제 정보 반환
    - 조회 실패: `TRANSACTION_NOT_FOUND` 응답
@@ -557,12 +562,16 @@
 
 ### Request Body
 
-| 필드                     | 타입   | 필수 | 설명                      |
-|--------------------------|--------|------|---------------------------|
-| `target_idempotency_key` | String | Y    | 조회 대상 가승인 멱등성 키 |
+| 필드                     | 타입   | 필수 | 설명                          |
+|--------------------------|--------|------|-------------------------------|
+| `pg_id`                  | String | Y    | PG 식별자 (예: "001")         |
+| `card_company`           | String | Y    | 카드사 (영문 enum name)       |
+| `target_idempotency_key` | String | Y    | 조회 대상 가승인 멱등성 키    |
 
 ```json
 {
+  "pg_id": "001",
+  "card_company": "SAMSUNG",
   "target_idempotency_key": "001-PRE-20260520155000-9a0b1c2d3e4f5a6b7c8d9e0f1"
 }
 ```
@@ -570,7 +579,8 @@
 ### Logic
 
 1. PG 서버로부터 조회 요청 수신
-2. `simulator_pre_approval`에서 `authorize_idempotency_key = target_idempotency_key` 조회
+2. `simulator_pre_approval`에서 `pg_id`, `card_company`, `authorize_idempotency_key = target_idempotency_key` 일치하는 row 조회
+   - 카드사는 실제로 서로 독립된 시스템이므로, 본인의 PG/카드사 영역 외 거래는 조회되지 않음 (시뮬레이터에서도 동일 가정)
 3. 결과 응답 구성
    - 조회 성공: 가승인 정보 반환
    - 조회 실패: `TRANSACTION_NOT_FOUND` 응답
