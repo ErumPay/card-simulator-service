@@ -165,10 +165,13 @@ public class PaymentService {
 
     @Transactional(readOnly = true)
     public PaymentInquireResponse inquire(PaymentInquireRequest request) {
-        var found = paymentRepository.findByIdempotencyKey(request.targetIdempotencyKey());
+        // 카드사는 실제로 서로 독립된 시스템이므로, 본인의 PG/카드사 영역 외 거래는 조회 불가
+        var found = paymentRepository.findByPgIdAndCardCompanyAndIdempotencyKey(
+                request.pgId(), request.cardCompany(), request.targetIdempotencyKey());
         if (found.isEmpty()) {
             SimulatorResponseCode rc = responseCodeResolver.resolve(Category.TRANSACTION, ResponseType.TRANSACTION_NOT_FOUND);
             return PaymentInquireResponse.builder()
+                    .pgId(request.pgId())
                     .idempotencyKey(request.targetIdempotencyKey())
                     .responseCode(rc.getResponseCode())
                     .responseMessage(rc.getResponseMessage())
