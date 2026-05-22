@@ -1,5 +1,6 @@
 package com.erumpay.card_simulator_service.repository;
 
+import com.erumpay.card_simulator_service.common.CardCompany;
 import com.erumpay.card_simulator_service.entity.SimulatorPreApproval;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -10,4 +11,7 @@ public interface SimulatorPreApprovalRepository extends JpaRepository<SimulatorP
     Optional<SimulatorPreApproval> findByAuthorizeIdempotencyKey(String authorizeIdempotencyKey);
 
     Optional<SimulatorPreApproval> findByCancelIdempotencyKey(String cancelIdempotencyKey);
+
+    Optional<SimulatorPreApproval> findByPgIdAndCardCompanyAndAuthorizeIdempotencyKey(
+            String pgId, CardCompany cardCompany, String authorizeIdempotencyKey);
 }
