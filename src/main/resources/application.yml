@@ -5,11 +5,16 @@ spring:
   jackson:
     property-naming-strategy: SNAKE_CASE
 
-  datasource:
-    url: jdbc:mysql://localhost:3308/simulator_db?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
-    username: root
-    password: 1234
+  # datasource:
+  #   url: jdbc:mysql://localhost:3308/simulator_db?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+  #   username: root
+  #   password: 1234
 
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3308/simulator_db}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:1234}
+  
   jpa:
     hibernate:
       ddl-auto: validate
@@ -27,4 +32,4 @@ aes:
 
 simulator:
   seed:
-    enabled: ${SIMULATOR_SEED_ENABLED:false}
+    enabled: ${SIMULATOR_SEED_ENABLED:true}

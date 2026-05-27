@@ -24,20 +24,19 @@ public class CardTokenController {
 
     private final CardTokenService cardTokenService;
 
+    /* ***** API 1 : Card Token Issue ***** */
     @PostMapping("/issue")
-    public TokenResponse issue(
-            @RequestHeader("Idempotency-Key") @NotBlank String idempotencyKey,
-            @RequestBody @Valid TokenIssueRequest request) {
+    public TokenResponse issue(@RequestHeader("Idempotency-Key") @NotBlank String idempotencyKey, @RequestBody @Valid TokenIssueRequest request) {
         return cardTokenService.issue(idempotencyKey, request);
     }
 
+    /* ***** API 2 : Card Token Delete ***** */
     @PostMapping("/delete")
-    public TokenDeleteResponse delete(
-            @RequestHeader("Idempotency-Key") @NotBlank String idempotencyKey,
-            @RequestBody @Valid TokenDeleteRequest request) {
+    public TokenDeleteResponse delete(@RequestHeader("Idempotency-Key") @NotBlank String idempotencyKey, @RequestBody @Valid TokenDeleteRequest request) {
         return cardTokenService.delete(idempotencyKey, request);
     }
 
+    /* ***** API 3 : Card Toeken Inquire ***** */
     @PostMapping("/inquire")
     public TokenResponse inquire(@RequestBody @Valid TokenInquireRequest request) {
         return cardTokenService.inquire(request);

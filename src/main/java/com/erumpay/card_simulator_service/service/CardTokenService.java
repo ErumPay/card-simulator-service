@@ -34,38 +34,60 @@ public class CardTokenService {
     private final ResponseCodeResolver responseCodeResolver;
     private final AesCryptoUtil aesCryptoUtil;
 
+    /* **************************************** */
+    /* **************************************** */
+    /* ***** API 1 : Card Token Key Issue ***** */
+    /* **************************************** */
+    /* **************************************** */
     @Transactional
     public TokenResponse issue(String idempotencyKey, TokenIssueRequest request) {
-        // 1. 멱등성 검사 — row 있으면 echo, 없으면 신규 발급
+        // idempotency-Key 기반 중복 요청 검사
         var existing = tokenRepository.findByIssueIdempotencyKey(idempotencyKey);
+
+        // 중복 시 기존 응답 반환
         if (existing.isPresent()) {
             SimulatorCardToken token = existing.get();
             return toResponse(token, idempotencyKey, cardOf(token.getCardId()));
         }
 
-        // 2. 카드 조회
+        // 카드 조회
         SimulatorCard card = cardRepository
                 .findByCardCompanyAndCardNumber(request.cardCompany(), aesCryptoUtil.encrypt(request.cardNumber()))
                 .orElse(null);
+        // 예외처리
         if (card == null) {
             return failureResponse(request.pgId(), idempotencyKey, request.cardCompany(),
-                    Category.CARD, ResponseType.CARD_INVALID_INFO);
+                    Category.CARD, ResponseType.CARD_NOT_FOUND);
         }
 
-        // 3. 카드 검증 (실패 시 응답만, DB 변경 없음)
-        if (card.getCardStatus() != SimulatorCard.CardStatus.ACTIVE) {
+        // 카드 상태 검증
+        ResponseType cardStatusFailure = switch (card.getCardStatus()) {
+            case ACTIVE -> null;
+            case LOST -> ResponseType.CARD_LOST;
+            case EXPIRED -> ResponseType.CARD_EXPIRED;
+            case DELETED -> ResponseType.CARD_DELETED;
+        };
+        if (cardStatusFailure != null) {
             return failureResponse(request.pgId(), idempotencyKey, request.cardCompany(),
-                    Category.CARD, ResponseType.CARD_INVALID_INFO);
+                    Category.CARD, cardStatusFailure);
         }
-        if (!card.getExpiryDate().equals(aesCryptoUtil.encrypt(request.expiryDate()))
-                || !card.getCvc().equals(aesCryptoUtil.encrypt(request.cvc()))) {
+        // 카드 만료일 검증
+        if (!card.getExpiryDate().equals(aesCryptoUtil.encrypt(request.expiryDate()))) {
             return failureResponse(request.pgId(), idempotencyKey, request.cardCompany(),
-                    Category.CARD, ResponseType.CARD_INVALID_INFO);
+                    Category.CARD, ResponseType.CARD_INVALID_EXPIRY);
         }
+        // CVC 검증
+        if (!card.getCvc().equals(aesCryptoUtil.encrypt(request.cvc()))) {
+            return failureResponse(request.pgId(), idempotencyKey, request.cardCompany(),
+                    Category.CARD, ResponseType.CARD_INVALID_CVC);
+        }
+        // 비밀번호 앞 두 자리 검증
         if (!PasswordHashUtil.verify(request.password2digit(), card.getCardSalt(), card.getPassword2digit())) {
             return failureResponse(request.pgId(), idempotencyKey, request.cardCompany(),
                     Category.CARD, ResponseType.CARD_INVALID_PASSWORD);
         }
+
+        // 사용자 검증
         SimulatorUser user = userRepository.findById(card.getUserId()).orElse(null);
         if (user == null || !user.getBirthDate().equals(aesCryptoUtil.encrypt(request.birthDate()))) {
             return failureResponse(request.pgId(), idempotencyKey, request.cardCompany(),
@@ -117,13 +139,23 @@ public class CardTokenService {
             return toDeleteResponse(existing.get(), idempotencyKey);
         }
 
-        // 2. card_company + card_token(ECB) 일치 ACTIVE 토큰 조회
+        // 2. card_company + card_token(ECB) 일치 토큰 조회 (상태 무관)
         String encryptedToken = aesCryptoUtil.encrypt(request.cardToken());
         SimulatorCardToken token = tokenRepository
-                .findByCardCompanyAndCardTokenAndTokenStatus(request.cardCompany(), encryptedToken, TokenStatus.ACTIVE)
+                .findByCardCompanyAndCardToken(request.cardCompany(), encryptedToken)
                 .orElse(null);
         if (token == null) {
             SimulatorResponseCode rc = responseCodeResolver.resolve(Category.TOKEN, ResponseType.TOKEN_NOT_FOUND);
+            return TokenDeleteResponse.builder()
+                    .pgId(request.pgId())
+                    .idempotencyKey(idempotencyKey)
+                    .cardToken(request.cardToken())
+                    .responseCode(rc.getResponseCode())
+                    .responseMessage(rc.getResponseMessage())
+                    .build();
+        }
+        if (token.getTokenStatus() != TokenStatus.ACTIVE) {
+            SimulatorResponseCode rc = responseCodeResolver.resolve(Category.TOKEN, ResponseType.TOKEN_ALREADY_DELETED);
             return TokenDeleteResponse.builder()
                     .pgId(request.pgId())
                     .idempotencyKey(idempotencyKey)
@@ -163,7 +195,7 @@ public class CardTokenService {
     public TokenResponse inquire(TokenInquireRequest request) {
         var found = tokenRepository.findByIssueIdempotencyKey(request.targetIdempotencyKey());
         if (found.isEmpty()) {
-            SimulatorResponseCode rc = responseCodeResolver.resolve(Category.TOKEN, ResponseType.TOKEN_NOT_FOUND);
+            SimulatorResponseCode rc = responseCodeResolver.resolve(Category.TOKEN, ResponseType.TOKEN_ISSUE_NOT_FOUND);
             return TokenResponse.builder()
                     .idempotencyKey(request.targetIdempotencyKey())
                     .responseCode(rc.getResponseCode())
@@ -175,6 +207,7 @@ public class CardTokenService {
         return toResponse(token, request.targetIdempotencyKey(), card);
     }
 
+    // 발급&조회 시 응답 형식 변환 (API 1, )
     private TokenResponse toResponse(SimulatorCardToken token, String idempotencyKey, SimulatorCard card) {
         return TokenResponse.builder()
                 .pgId(token.getPgId())
