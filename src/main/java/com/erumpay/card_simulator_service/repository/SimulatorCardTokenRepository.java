@@ -17,4 +17,8 @@ public interface SimulatorCardTokenRepository extends JpaRepository<SimulatorCar
             com.erumpay.card_simulator_service.common.CardCompany cardCompany,
             String cardToken,
             SimulatorCardToken.TokenStatus tokenStatus);
+
+    Optional<SimulatorCardToken> findByCardCompanyAndCardToken(
+            com.erumpay.card_simulator_service.common.CardCompany cardCompany,
+            String cardToken);
 }
