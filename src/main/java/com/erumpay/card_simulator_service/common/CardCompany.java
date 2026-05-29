@@ -21,7 +21,17 @@ public enum CardCompany {
     HANA("하나카드"),
     NH("NH농협카드"),
     IBK("IBK기업은행"),
-    OTHER("그외 카드"),
+    BC("BC카드"),
+    KG_FINANCIAL("KG파이낸셜"),
+    MG_COMMUNITY("MG새마을금고"),
+    OK_CASHBAG("OK캐쉬백"),
+    NAVERPAY("네이버페이"),
+    PAYCO("NHN페이코"),
+    EPOST("우체국"),
+    JEJU_BANK("제주은행"),
+    KAKAO_BANK("카카오뱅크"),
+    K_BANK("케이뱅크"),
+    TOSS_BANK("토스뱅크"),
     UNKNOWN("미식별 카드사");
 
     @JsonValue

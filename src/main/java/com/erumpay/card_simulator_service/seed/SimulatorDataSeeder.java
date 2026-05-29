@@ -1,7 +1,7 @@
 package com.erumpay.card_simulator_service.seed;
 
 import com.erumpay.card_simulator_service.common.AesCryptoUtil;
-import com.erumpay.card_simulator_service.common.CardCompany;
+import com.erumpay.card_simulator_service.common.IinMapping;
 import com.erumpay.card_simulator_service.common.PasswordHashUtil;
 import com.erumpay.card_simulator_service.entity.SimulatorCard;
 import com.erumpay.card_simulator_service.entity.SimulatorCardProduct;
@@ -17,14 +17,25 @@ import com.erumpay.card_simulator_service.repository.SimulatorResponseCodeReposi
 import com.erumpay.card_simulator_service.repository.SimulatorUserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Component
 @ConditionalOnProperty(value = "simulator.seed.enabled", havingValue = "true")
@@ -32,12 +43,29 @@ import java.util.List;
 @Slf4j
 public class SimulatorDataSeeder implements CommandLineRunner {
 
+    // CSV 컬럼 순서: 0 이름, 1 전화번호, 2 생년월일, 3 카드사(참고용), 4 카드상품명(참고용),
+    //               5 카드번호, 6 CVC, 7 만료일, 8 카드비밀번호, 9 카드상태
+    private static final int COL_NAME = 0;
+    private static final int COL_PHONE = 1;
+    private static final int COL_BIRTH = 2;
+    private static final int COL_CARD_NUMBER = 5;
+    private static final int COL_CVC = 6;
+    private static final int COL_EXPIRY = 7;
+    private static final int COL_PASSWORD = 8;
+    private static final int COL_STATUS = 9;
+    private static final int MIN_COLUMNS = 10;
+    private static final char BOM = 0xFEFF;
+
     private final SimulatorUserRepository userRepository;
     private final SimulatorCardProductRepository productRepository;
     private final SimulatorCardRepository cardRepository;
     private final SimulatorResponseCodeRepository responseCodeRepository;
     private final SimulatorConfigRepository configRepository;
     private final AesCryptoUtil aesCryptoUtil;
+
+    // 사용자/카드 시드는 .env 와 동일 위치(프로젝트 루트)의 seed.csv 에서 읽는다.
+    @Value("${simulator.seed.csv-path:seed.csv}")
+    private String csvPath;
 
     @Override
     @Transactional
@@ -49,10 +77,14 @@ public class SimulatorDataSeeder implements CommandLineRunner {
 
         seedConfig();
         seedResponseCodes();
-        List<SimulatorUser> users = seedUsers();
-        seedCardsAndProducts(users);
+        List<SimulatorCardProduct> products = seedProducts();
 
-        log.info("Simulator data seeded successfully.");
+        List<CardRow> rows = readSeedCsv();
+        Map<String, SimulatorUser> usersByKey = seedUsers(rows);
+        seedCards(rows, usersByKey, products);
+
+        log.info("Simulator data seeded successfully. users={}, products={}, cards={}",
+                usersByKey.size(), products.size(), rows.size());
     }
 
     private void seedConfig() {
@@ -107,12 +139,31 @@ public class SimulatorDataSeeder implements CommandLineRunner {
                 .build();
     }
 
-    private List<SimulatorUser> seedUsers() {
-        List<SimulatorUser> users = new ArrayList<>();
-        for (UserSeed seed : USER_SEEDS) {
-            users.add(user(seed.name(), seed.phoneNumber(), seed.birthDate()));
+    private List<SimulatorCardProduct> seedProducts() {
+        List<SimulatorCardProduct> products = new ArrayList<>();
+        for (CardProductCatalog.ProductSeed seed : CardProductCatalog.PRODUCTS) {
+            products.add(SimulatorCardProduct.builder()
+                    .cardCompany(IinMapping.findByCardNumber(seed.mockBin()))
+                    .productName(seed.productName())
+                    .build());
         }
-        return userRepository.saveAll(users);
+        return productRepository.saveAll(products);
+    }
+
+    // CSV 의 (이름,전화,생년월일) 조합별로 사용자 1명을 생성한다. 등장 순서를 보존한다.
+    private Map<String, SimulatorUser> seedUsers(List<CardRow> rows) {
+        Map<String, SimulatorUser> distinct = new LinkedHashMap<>();
+        for (CardRow row : rows) {
+            distinct.computeIfAbsent(row.userKey(), k -> user(row.name(), row.phoneNumber(), row.birthDate()));
+        }
+        List<SimulatorUser> saved = userRepository.saveAll(new ArrayList<>(distinct.values()));
+
+        Map<String, SimulatorUser> usersByKey = new LinkedHashMap<>();
+        int i = 0;
+        for (String key : distinct.keySet()) {
+            usersByKey.put(key, saved.get(i++));
+        }
+        return usersByKey;
     }
 
     private SimulatorUser user(String name, String phoneNumber, String birthDate) {
@@ -123,38 +174,41 @@ public class SimulatorDataSeeder implements CommandLineRunner {
                 .build();
     }
 
-    private void seedCardsAndProducts(List<SimulatorUser> users) {
-        // 사용자별 카드 3장씩 = 총 30장. 카드사는 mock_bin 80~88 정합 유지.
-        // 모든 (cardCompany, productName) 조합을 1회씩 product로 시드하고, 그 product에 카드를 매핑.
+    // 카드는 CSV 행 그대로 생성한다. 카드↔상품 매핑은 카드번호 앞 6자리(mockBin)로 카탈로그 상품을 찾는다.
+    private void seedCards(List<CardRow> rows, Map<String, SimulatorUser> usersByKey,
+                           List<SimulatorCardProduct> products) {
+        Map<String, SimulatorCardProduct> productByBin = new HashMap<>();
+        for (int i = 0; i < products.size(); i++) {
+            productByBin.put(CardProductCatalog.PRODUCTS.get(i).mockBin(), products.get(i));
+        }
+
         List<SimulatorCard> cards = new ArrayList<>();
-        for (int i = 0; i < USER_SEEDS.size(); i++) {
-            SimulatorUser user = users.get(i);
-            for (CardSeed seed : USER_SEEDS.get(i).cards()) {
-                SimulatorCardProduct product = productRepository.save(
-                        SimulatorCardProduct.builder()
-                                .cardCompany(seed.company())
-                                .productName(seed.productName())
-                                .build()
-                );
-                cards.add(buildCard(user, product, seed.cardNumber()));
+        for (CardRow row : rows) {
+            SimulatorUser owner = usersByKey.get(row.userKey());
+            String bin = row.cardNumber().substring(0, 6);
+            SimulatorCardProduct product = productByBin.get(bin);
+            if (product == null) {
+                throw new IllegalStateException("No card product found for mockBin: " + bin
+                        + " (cardNumber=" + row.cardNumber() + ")");
             }
+            cards.add(buildCard(owner, product, row));
         }
         cardRepository.saveAll(cards);
     }
 
-    private SimulatorCard buildCard(SimulatorUser user, SimulatorCardProduct product, String cardNumber) {
+    private SimulatorCard buildCard(SimulatorUser user, SimulatorCardProduct product, CardRow row) {
         String salt = PasswordHashUtil.generateSalt();
         return SimulatorCard.builder()
                 .userId(user.getUserId())
                 .productId(product.getProductId())
                 .cardCompany(product.getCardCompany())
-                .cardNumber(aesCryptoUtil.encrypt(cardNumber))
-                .maskedNumber(toMaskedNumber(cardNumber))
-                .expiryDate(aesCryptoUtil.encrypt("2912"))
-                .cvc(aesCryptoUtil.encrypt("123"))
-                .password2digit(PasswordHashUtil.hash("12", salt))
+                .cardNumber(aesCryptoUtil.encrypt(row.cardNumber()))
+                .maskedNumber(toMaskedNumber(row.cardNumber()))
+                .expiryDate(aesCryptoUtil.encrypt(row.expiryDate()))
+                .cvc(aesCryptoUtil.encrypt(row.cvc()))
+                .password2digit(PasswordHashUtil.hash(row.password(), salt))
                 .cardSalt(salt)
-                .cardStatus(SimulatorCard.CardStatus.ACTIVE)
+                .cardStatus(row.status())
                 .build();
     }
 
@@ -168,64 +222,111 @@ public class SimulatorDataSeeder implements CommandLineRunner {
                 + cardNumber.substring(12, 16);
     }
 
-    private record CardSeed(CardCompany company, String productName, String cardNumber) {}
+    private List<CardRow> readSeedCsv() {
+        Path path = Path.of(csvPath);
+        if (!Files.exists(path)) {
+            throw new IllegalStateException("Seed CSV not found: " + path.toAbsolutePath()
+                    + " (simulator.seed.csv-path)");
+        }
 
-    private record UserSeed(String name, String phoneNumber, String birthDate, List<CardSeed> cards) {}
+        List<CardRow> rows = new ArrayList<>();
+        try (BufferedReader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
+            String line;
+            int lineNo = 0;
+            while ((line = reader.readLine()) != null) {
+                lineNo++;
+                if (lineNo == 1) {
+                    continue; // 헤더 스킵
+                }
+                if (!StringUtils.hasText(line)) {
+                    continue;
+                }
+                rows.add(parseRow(stripBom(line), lineNo));
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException("Failed to read seed CSV: " + path.toAbsolutePath(), e);
+        }
 
-    // 사용자 10명 × 카드 3장씩 = 30장.
-    // 이름: 가-차 자음 슬라이딩(가나다, 나다라, …, 차카타)
-    // 카드사 분배 라운드 로빈: (삼성/신한/현대) → (KB/롯데/우리) → (하나/NH/IBK) 반복
-    // 카드번호 = mock_bin(6, init 11과 정합) + 1234567890 → 16자리
-    private static final List<UserSeed> USER_SEEDS = List.of(
-            new UserSeed("가나다", "01011111111", "900101", List.of(
-                    new CardSeed(CardCompany.SAMSUNG, "삼성 iD SELECT ALL 카드",       "8000111234567890"),
-                    new CardSeed(CardCompany.SHINHAN, "신한카드 Mr.Life",               "8100001234567890"),
-                    new CardSeed(CardCompany.HYUNDAI, "현대카드ZERO Edition3(할인형)",  "8200001234567890")
-            )),
-            new UserSeed("나다라", "01022222222", "910202", List.of(
-                    new CardSeed(CardCompany.KB,      "KB국민 My WE:SH 카드",           "8300061234567890"),
-                    new CardSeed(CardCompany.LOTTE,   "LOCA 365 카드",                  "8400041234567890"),
-                    new CardSeed(CardCompany.WOORI,   "카드의정석 SHOPPING+",           "8500021234567890")
-            )),
-            new UserSeed("다라마", "01033333333", "920303", List.of(
-                    new CardSeed(CardCompany.HANA,    "JADE Classic",                   "8600021234567890"),
-                    new CardSeed(CardCompany.NH,      "올바른 FLEX 카드",               "8700011234567890"),
-                    new CardSeed(CardCompany.IBK,     "K-패스 (신용)",                  "8800021234567890")
-            )),
-            new UserSeed("라마바", "01044444444", "930404", List.of(
-                    new CardSeed(CardCompany.SAMSUNG, "삼성카드 taptap O",              "8000011234567890"),
-                    new CardSeed(CardCompany.SHINHAN, "신한카드 Deep Oil",              "8100031234567890"),
-                    new CardSeed(CardCompany.HYUNDAI, "현대카드ZERO Edition3(포인트형)","8200011234567890")
-            )),
-            new UserSeed("마바사", "01055555555", "940505", List.of(
-                    new CardSeed(CardCompany.KB,      "굿데이카드",                     "8300001234567890"),
-                    new CardSeed(CardCompany.LOTTE,   "LOCA LIKIT 1.2",                 "8400011234567890"),
-                    new CardSeed(CardCompany.WOORI,   "카드의정석2",                    "8500071234567890")
-            )),
-            new UserSeed("바사아", "01066666666", "950606", List.of(
-                    new CardSeed(CardCompany.HANA,    "트래블로그 신용카드",            "8600011234567890"),
-                    new CardSeed(CardCompany.NH,      "zgm.streaming카드",              "8700031234567890"),
-                    new CardSeed(CardCompany.IBK,     "I-ALL",                          "8800011234567890")
-            )),
-            new UserSeed("사아자", "01077777777", "960707", List.of(
-                    new CardSeed(CardCompany.SAMSUNG, "삼성카드 & MILEAGE PLATINUM (스카이패스)", "8000001234567890"),
-                    new CardSeed(CardCompany.SHINHAN, "신한카드 Discount Plan+",        "8100131234567890"),
-                    new CardSeed(CardCompany.HYUNDAI, "현대카드 M",                     "8200041234567890")
-            )),
-            new UserSeed("아자차", "01088888888", "970808", List.of(
-                    new CardSeed(CardCompany.KB,      "쿠팡 와우카드",                  "8300081234567890"),
-                    new CardSeed(CardCompany.LOTTE,   "LOCA LIKIT",                     "8400001234567890"),
-                    new CardSeed(CardCompany.WOORI,   "카드의정석 EVERY DISCOUNT",      "8500061234567890")
-            )),
-            new UserSeed("자차카", "01099999999", "980909", List.of(
-                    new CardSeed(CardCompany.HANA,    "토스뱅크 하나카드 Day",          "8600041234567890"),
-                    new CardSeed(CardCompany.NH,      "zgm.play카드",                   "8700041234567890"),
-                    new CardSeed(CardCompany.IBK,     "IBK포인트(신용)",                "8800051234567890")
-            )),
-            new UserSeed("차카타", "01010101010", "991010", List.of(
-                    new CardSeed(CardCompany.SAMSUNG, "삼성 iD GLOBAL 카드",            "8000101234567890"),
-                    new CardSeed(CardCompany.SHINHAN, "신한카드 Air One",               "8100041234567890"),
-                    new CardSeed(CardCompany.HYUNDAI, "현대카드T",                      "8200131234567890")
-            ))
-    );
+        if (rows.isEmpty()) {
+            throw new IllegalStateException("Seed CSV has no data rows: " + path.toAbsolutePath());
+        }
+        return rows;
+    }
+
+    private CardRow parseRow(String line, int lineNo) {
+        List<String> cols = parseCsvLine(line);
+        if (cols.size() < MIN_COLUMNS) {
+            throw new IllegalStateException("Seed CSV line " + lineNo + " must have at least "
+                    + MIN_COLUMNS + " columns, got " + cols.size() + ": " + line);
+        }
+        String cardNumber = cols.get(COL_CARD_NUMBER).trim();
+        if (cardNumber.length() != 16) {
+            throw new IllegalStateException("Seed CSV line " + lineNo
+                    + " card number must be 16 digits: " + cardNumber);
+        }
+        return new CardRow(
+                cols.get(COL_NAME).trim(),
+                cols.get(COL_PHONE).trim(),
+                cols.get(COL_BIRTH).trim(),
+                cardNumber,
+                cols.get(COL_CVC).trim(),
+                cols.get(COL_EXPIRY).trim(),
+                cols.get(COL_PASSWORD).trim(),
+                parseStatus(cols.get(COL_STATUS).trim(), lineNo)
+        );
+    }
+
+    private SimulatorCard.CardStatus parseStatus(String raw, int lineNo) {
+        if (!StringUtils.hasText(raw)) {
+            return SimulatorCard.CardStatus.ACTIVE;
+        }
+        try {
+            return SimulatorCard.CardStatus.valueOf(raw.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException("Seed CSV line " + lineNo
+                    + " has unknown card status: " + raw, e);
+        }
+    }
+
+    // 쌍따옴표(필드 내 콤마/escape) 를 지원하는 최소 CSV 파서.
+    private static List<String> parseCsvLine(String line) {
+        List<String> result = new ArrayList<>();
+        StringBuilder sb = new StringBuilder();
+        boolean inQuotes = false;
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+            if (inQuotes) {
+                if (c == '"') {
+                    if (i + 1 < line.length() && line.charAt(i + 1) == '"') {
+                        sb.append('"');
+                        i++;
+                    } else {
+                        inQuotes = false;
+                    }
+                } else {
+                    sb.append(c);
+                }
+            } else if (c == '"') {
+                inQuotes = true;
+            } else if (c == ',') {
+                result.add(sb.toString());
+                sb.setLength(0);
+            } else {
+                sb.append(c);
+            }
+        }
+        result.add(sb.toString());
+        return result;
+    }
+
+    private static String stripBom(String s) {
+        return (!s.isEmpty() && s.charAt(0) == BOM) ? s.substring(1) : s;
+    }
+
+    private record CardRow(String name, String phoneNumber, String birthDate, String cardNumber,
+                           String cvc, String expiryDate, String password, SimulatorCard.CardStatus status) {
+        String userKey() {
+            return name + "|" + phoneNumber + "|" + birthDate;
+        }
+    }
 }

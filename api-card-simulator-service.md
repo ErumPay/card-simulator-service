@@ -46,8 +46,8 @@ Idempotency-Key : 001-ISS-20260519100000-aaaaaaaaaaaaaaaaaaaaaaaaa
 
 {
   "pg_id": "001",
-  "card_company": "신한카드",
-  "card_number": "8100001234567890",
+  "card_company": "삼성카드",
+  "card_number": "8000111234567890",
   "expiry_date": "2912",
   "cvc": "123",
   "password_2digit": "12",
@@ -109,9 +109,9 @@ Idempotency-Key : 001-ISS-20260519100000-aaaaaaaaaaaaaaaaaaaaaaaaa
     "pg_id": "001",
     "idempotency_key": "001-ISS-20260519100000-aaaaaaaaaaaaaaaaaaaaaaaaa",
     "token_status": "ACTIVE",
-    "card_token": "f0818fa2bde14e8e944089d4f353549a",
-    "card_company": "신한카드",
-    "masked_number": "8100-****-****-7890",
+    "card_token": "f7cd8f1fa47c461a9fb4f715df543bef",
+    "card_company": "삼성카드",
+    "masked_number": "8000-****-****-7890",
     "response_code": "100",
     "response_message": "정상 처리되었습니다."
 }
@@ -142,12 +142,12 @@ Idempotency-Key : 001-ISS-20260519100000-aaaaaaaaaaaaaaaaaaaaaaaaa
 
 ```json
 
-Idempotency-Key : 001-ISS-20260519100000-bbbbbbbbbbbbbbbbbbbbbbbbb
+Idempotency-Key : 001-DEL-20260519100000-bbbbbbbbbbbbbbbbbbbbbbbbb
 
 {
   "pg_id": "001",
   "card_company": "삼성카드",
-  "card_token": "f0818fa2bde14e8e944089d4f353549a"
+  "card_token": "5777475f7d34440497f13f5c9ae054a8"
 }
 ```
 
@@ -183,7 +183,7 @@ Idempotency-Key : 001-ISS-20260519100000-bbbbbbbbbbbbbbbbbbbbbbbbb
 {
     "pg_id": "001",
     "idempotency_key": "001-ISS-20260519100000-bbbbbbbbbbbbbbbbbbbbbbbbb",
-    "card_token": "f0818fa2bde14e8e944089d4f353549a",
+    "card_token": "5777475f7d34440497f13f5c9ae054a8",
     "response_code": "100",
     "response_message": "정상 처리되었습니다."
 }
