@@ -22,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 
 @Service
 @RequiredArgsConstructor
@@ -50,7 +49,7 @@ public class PerformanceService {
         SimulatorCardProduct product = productRepository
                 .findByCardCompanyAndProductName(request.cardCompany(), request.productName()).orElse(null);
         if (product == null) {
-            return failureResponse(request, Category.CARD, ResponseType.CARD_INVALID_INFO);
+            return failureResponse(request, Category.CARD, ResponseType.CARD_NOT_FOUND);
         }
 
         // 3. 사용자 카드 유효성: user_id + product_id + ACTIVE
@@ -58,14 +57,12 @@ public class PerformanceService {
                 .findByUserIdAndProductIdAndCardStatus(user.getUserId(), product.getProductId(), CardStatus.ACTIVE)
                 .orElse(null);
         if (card == null) {
-            return failureResponse(request, Category.CARD, ResponseType.CARD_INVALID_INFO);
+            return failureResponse(request, Category.CARD, ResponseType.CARD_NOT_FOUND);
         }
 
         // 4. 누적 금액 집계 (해당 월 performance_date 범위, APPROVED − CANCELED)
-        YearMonth period = parsePeriod(request.inquiryPeriod());
-        if (period == null) {
-            return failureResponse(request, Category.CARD, ResponseType.CARD_INVALID_INFO);
-        }
+        // inquiry_period는 @Pattern으로 유효한 YYYYMM만 통과하므로 파싱 실패는 발생하지 않음
+        YearMonth period = YearMonth.parse(request.inquiryPeriod(), PERIOD_FORMATTER);
         LocalDateTime start = period.atDay(1).atStartOfDay();
         LocalDateTime end = period.plusMonths(1).atDay(1).atStartOfDay();
 
@@ -85,14 +82,6 @@ public class PerformanceService {
                 .responseCode(rc.getResponseCode())
                 .responseMessage(rc.getResponseMessage())
                 .build();
-    }
-
-    private YearMonth parsePeriod(String inquiryPeriod) {
-        try {
-            return YearMonth.parse(inquiryPeriod, PERIOD_FORMATTER);
-        } catch (DateTimeParseException e) {
-            return null;
-        }
     }
 
     private PerformanceInquireResponse failureResponse(PerformanceInquireRequest request,

@@ -11,6 +11,6 @@ public record PerformanceInquireRequest(
         @JsonProperty("phone_number") @NotBlank String phoneNumber,
         @JsonProperty("card_company") @NotNull CardCompany cardCompany,
         @JsonProperty("product_name") @NotBlank String productName,
-        @JsonProperty("inquiry_period") @NotBlank @Pattern(regexp = "\\d{6}") String inquiryPeriod
+        @JsonProperty("inquiry_period") @NotBlank @Pattern(regexp = "(?!0000)\\d{4}(0[1-9]|1[0-2])") String inquiryPeriod
 ) {
 }
