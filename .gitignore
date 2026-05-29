@@ -35,3 +35,7 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Simulator seed data / 환경변수 (개인정보·시크릿 포함) ###
+/.env
+/seed.csv

@@ -33,3 +33,5 @@ aes:
 simulator:
   seed:
     enabled: ${SIMULATOR_SEED_ENABLED:true}
+    # 사용자/카드 시드는 .env 와 동일 위치(프로젝트 루트)의 seed.csv 에서 읽는다.
+    csv-path: ${SIMULATOR_SEED_CSV_PATH:seed.csv}
