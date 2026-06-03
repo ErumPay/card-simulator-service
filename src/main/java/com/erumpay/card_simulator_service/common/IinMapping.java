@@ -4,6 +4,21 @@ public class IinMapping {
 
     private IinMapping() {}
 
+    public enum CardForm { CREDIT, CHECK }
+
+    // mockBin 규약: xx0000~xx0499 = 신용, xx0500~xx0999 = 체크 (CardProductCatalog 일관 적용)
+    public static CardForm resolveCardForm(String cardNumber) {
+        if (cardNumber == null) {
+            return CardForm.CREDIT;
+        }
+        String normalized = cardNumber.replaceAll("\\D", "");
+        if (normalized.length() < 6) {
+            return CardForm.CREDIT;
+        }
+        int suffix = Integer.parseInt(normalized.substring(2, 6));
+        return suffix < 500 ? CardForm.CREDIT : CardForm.CHECK;
+    }
+
     public static CardCompany findByCardNumber(String cardNumber) {
         if (cardNumber == null) {
             return CardCompany.UNKNOWN;

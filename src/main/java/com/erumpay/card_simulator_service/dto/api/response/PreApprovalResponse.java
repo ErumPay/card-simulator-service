@@ -14,7 +14,9 @@ public record PreApprovalResponse(
         @JsonProperty("pre_approval_number") String preApprovalNumber,
         @JsonProperty("pre_approved_at") String preApprovedAt,
         @JsonProperty("approved_amount") Long approvedAmount,
+        @JsonProperty("response_http") Integer responseHttp,
         @JsonProperty("response_code") String responseCode,
+        @JsonProperty("response_reason") String responseReason,
         @JsonProperty("response_message") String responseMessage
 ) {
 }

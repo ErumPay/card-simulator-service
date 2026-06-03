@@ -50,6 +50,7 @@ public class PreApprovalService {
     private final SimulatorCardRepository cardRepository;
     private final SimulatorConfigRepository configRepository;
     private final ResponseCodeResolver responseCodeResolver;
+    private final SimulateRejectReasonResolver simulateRejectReasonResolver;
     private final AesCryptoUtil aesCryptoUtil;
     private final SecureRandom random = new SecureRandom();
 
@@ -83,14 +84,23 @@ public class PreApprovalService {
         SimulatorCardToken token = findActiveToken(request.cardCompany(), request.cardToken());
         if (token == null) {
             return failureResponseWithoutRow(idempotencyKey, request,
-                    Category.PAYMENT, ResponseType.PAYMENT_REJECTED);
+                    Category.PAYMENT, ResponseType.PAYMENT_TOKEN_INVALID);
         }
 
         // 3. 카드 상태 검증
         SimulatorCard card = cardRepository.findById(token.getCardId()).orElse(null);
-        if (card == null || card.getCardStatus() != SimulatorCard.CardStatus.ACTIVE) {
+        if (card == null) {
             return failureResponseWithoutRow(idempotencyKey, request,
-                    Category.PAYMENT, ResponseType.PAYMENT_REJECTED);
+                    Category.PAYMENT, ResponseType.PAYMENT_CARD_NOT_FOUND);
+        }
+        ResponseType cardStatusFailure = switch (card.getCardStatus()) {
+            case ACTIVE -> null;
+            case LOST -> ResponseType.PAYMENT_CARD_LOST;
+            case EXPIRED -> ResponseType.PAYMENT_CARD_EXPIRED;
+            case DELETED -> ResponseType.PAYMENT_CARD_DELETED;
+        };
+        if (cardStatusFailure != null) {
+            return failureResponseWithoutRow(idempotencyKey, request, Category.PAYMENT, cardStatusFailure);
         }
 
         // 4. 시뮬레이션 적용 (지연은 트랜잭션 종료 후 wrapper에서)
@@ -98,7 +108,7 @@ public class PreApprovalService {
         boolean approved = simulate(config, card);
 
         // 5. 가승인 번호 + row INSERT
-        ResponseType resultType = approved ? ResponseType.SUCCESS : ResponseType.PAYMENT_REJECTED;
+        ResponseType resultType = approved ? ResponseType.SUCCESS : simulateRejectReasonResolver.resolve(card);
         SimulatorResponseCode rc = responseCodeResolver.resolve(Category.PAYMENT, resultType);
         SimulatorPreApproval saved = insertWithUniquePreApprovalNumber(idempotencyKey,
                 () -> SimulatorPreApproval.builder()
@@ -172,11 +182,14 @@ public class PreApprovalService {
             return PreApprovalInquireResponse.builder()
                     .pgId(request.pgId())
                     .idempotencyKey(request.targetIdempotencyKey())
+                    .responseHttp(rc.getResponseHttp())
                     .responseCode(rc.getResponseCode())
+                    .responseReason(rc.getResponseReason())
                     .responseMessage(rc.getResponseMessage())
                     .build();
         }
         SimulatorPreApproval row = found.get();
+        SimulatorResponseCode rc = responseCodeResolver.resolveByCode(row.getResponseCode());
         return PreApprovalInquireResponse.builder()
                 .pgId(row.getPgId())
                 .idempotencyKey(row.getAuthorizeIdempotencyKey())
@@ -186,8 +199,10 @@ public class PreApprovalService {
                 .preApprovalNumber(row.getPreApprovalNumber())
                 .preApprovedAt(format(row.getCreatedAt()))
                 .approvedAmount(row.getApprovedAmount())
-                .responseCode(row.getResponseCode())
-                .responseMessage(row.getResponseMessage())
+                .responseHttp(rc.getResponseHttp())
+                .responseCode(rc.getResponseCode())
+                .responseReason(rc.getResponseReason())
+                .responseMessage(rc.getResponseMessage())
                 .build();
     }
 
@@ -262,7 +277,9 @@ public class PreApprovalService {
                 .pgTxnId(request.pgTxnId())
                 .preApprovalStatus(PreApprovalStatus.FAILED)
                 .approvedAmount(request.approvedAmount())
+                .responseHttp(rc.getResponseHttp())
                 .responseCode(rc.getResponseCode())
+                .responseReason(rc.getResponseReason())
                 .responseMessage(rc.getResponseMessage())
                 .build();
     }
@@ -275,12 +292,15 @@ public class PreApprovalService {
                 .idempotencyKey(idempotencyKey)
                 .pgTxnId(request.pgTxnId())
                 .preApprovalNumber(request.preApprovalNumber())
+                .responseHttp(rc.getResponseHttp())
                 .responseCode(rc.getResponseCode())
+                .responseReason(rc.getResponseReason())
                 .responseMessage(rc.getResponseMessage())
                 .build();
     }
 
     private PreApprovalResponse toAuthorizedResponse(SimulatorPreApproval row) {
+        SimulatorResponseCode rc = responseCodeResolver.resolveByCode(row.getResponseCode());
         return PreApprovalResponse.builder()
                 .pgId(row.getPgId())
                 .idempotencyKey(row.getAuthorizeIdempotencyKey())
@@ -290,12 +310,15 @@ public class PreApprovalService {
                 .preApprovalNumber(row.getPreApprovalNumber())
                 .preApprovedAt(format(row.getCreatedAt()))
                 .approvedAmount(row.getApprovedAmount())
-                .responseCode(row.getResponseCode())
-                .responseMessage(row.getResponseMessage())
+                .responseHttp(rc.getResponseHttp())
+                .responseCode(rc.getResponseCode())
+                .responseReason(rc.getResponseReason())
+                .responseMessage(rc.getResponseMessage())
                 .build();
     }
 
     private PreApprovalCancelResponse toCancelResponse(SimulatorPreApproval row, Long cancelPgTxnId) {
+        SimulatorResponseCode rc = responseCodeResolver.resolveByCode(row.getResponseCode());
         return PreApprovalCancelResponse.builder()
                 .pgId(row.getPgId())
                 .idempotencyKey(row.getCancelIdempotencyKey())
@@ -303,8 +326,10 @@ public class PreApprovalService {
                 .preApprovalStatus(row.getPreApprovalStatus())
                 .preApprovalNumber(row.getPreApprovalNumber())
                 .cancelledAt(format(row.getUpdatedAt()))
-                .responseCode(row.getResponseCode())
-                .responseMessage(row.getResponseMessage())
+                .responseHttp(rc.getResponseHttp())
+                .responseCode(rc.getResponseCode())
+                .responseReason(rc.getResponseReason())
+                .responseMessage(rc.getResponseMessage())
                 .build();
     }
 

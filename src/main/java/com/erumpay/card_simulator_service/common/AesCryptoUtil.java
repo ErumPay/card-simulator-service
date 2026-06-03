@@ -1,5 +1,7 @@
 package com.erumpay.card_simulator_service.common;
 
+import com.erumpay.card_simulator_service.exception.CustomException;
+import com.erumpay.card_simulator_service.exception.ErrorCode;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -37,7 +39,7 @@ public class AesCryptoUtil {
             byte[] encrypted = cipher.doFinal(plaintext.getBytes(StandardCharsets.UTF_8));
             return Base64.getEncoder().encodeToString(encrypted);
         } catch (Exception e) {
-            throw new RuntimeException("AES 암호화 실패", e);
+            throw new CustomException(ErrorCode.ENCRYPTION_ERROR, e);
         }
     }
 
@@ -48,7 +50,7 @@ public class AesCryptoUtil {
             cipher.init(Cipher.DECRYPT_MODE, keySpec);
             return new String(cipher.doFinal(decoded), StandardCharsets.UTF_8);
         } catch (Exception e) {
-            throw new RuntimeException("AES 복호화 실패", e);
+            throw new CustomException(ErrorCode.ENCRYPTION_ERROR, e);
         }
     }
 }

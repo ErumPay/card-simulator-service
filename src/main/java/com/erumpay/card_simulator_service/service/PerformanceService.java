@@ -42,7 +42,7 @@ public class PerformanceService {
         String encryptedPhone = aesCryptoUtil.encrypt(request.phoneNumber());
         SimulatorUser user = userRepository.findByNameAndPhoneNumber(request.name(), encryptedPhone).orElse(null);
         if (user == null) {
-            return failureResponse(request, Category.USER, ResponseType.USER_INVALID_INFO);
+            return failureResponse(request, Category.USER, ResponseType.USER_PHONE_INVALID);
         }
 
         // 2. 카드 상품 식별: card_company + product_name
@@ -79,7 +79,9 @@ public class PerformanceService {
                 .productName(request.productName())
                 .inquiryPeriod(request.inquiryPeriod())
                 .currentAmount(currentAmount)
+                .responseHttp(rc.getResponseHttp())
                 .responseCode(rc.getResponseCode())
+                .responseReason(rc.getResponseReason())
                 .responseMessage(rc.getResponseMessage())
                 .build();
     }
@@ -91,7 +93,9 @@ public class PerformanceService {
                 .cardCompany(request.cardCompany())
                 .productName(request.productName())
                 .inquiryPeriod(request.inquiryPeriod())
+                .responseHttp(rc.getResponseHttp())
                 .responseCode(rc.getResponseCode())
+                .responseReason(rc.getResponseReason())
                 .responseMessage(rc.getResponseMessage())
                 .build();
     }

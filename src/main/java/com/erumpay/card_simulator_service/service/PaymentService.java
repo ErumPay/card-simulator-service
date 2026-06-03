@@ -50,6 +50,7 @@ public class PaymentService {
     private final SimulatorCardRepository cardRepository;
     private final SimulatorConfigRepository configRepository;
     private final ResponseCodeResolver responseCodeResolver;
+    private final SimulateRejectReasonResolver simulateRejectReasonResolver;
     private final AesCryptoUtil aesCryptoUtil;
     private final SecureRandom random = new SecureRandom();
 
@@ -76,13 +77,22 @@ public class PaymentService {
         // 2. 토큰 검증
         SimulatorCardToken token = findActiveToken(request.cardCompany(), request.cardToken());
         if (token == null) {
-            return approveRejectedWithoutRow(idempotencyKey, request);
+            return approveRejectedWithoutRow(idempotencyKey, request, ResponseType.PAYMENT_TOKEN_INVALID);
         }
 
         // 3. 카드 상태 검증
         SimulatorCard card = cardRepository.findById(token.getCardId()).orElse(null);
-        if (card == null || card.getCardStatus() != SimulatorCard.CardStatus.ACTIVE) {
-            return approveRejectedWithoutRow(idempotencyKey, request);
+        if (card == null) {
+            return approveRejectedWithoutRow(idempotencyKey, request, ResponseType.PAYMENT_CARD_NOT_FOUND);
+        }
+        ResponseType cardStatusFailure = switch (card.getCardStatus()) {
+            case ACTIVE -> null;
+            case LOST -> ResponseType.PAYMENT_CARD_LOST;
+            case EXPIRED -> ResponseType.PAYMENT_CARD_EXPIRED;
+            case DELETED -> ResponseType.PAYMENT_CARD_DELETED;
+        };
+        if (cardStatusFailure != null) {
+            return approveRejectedWithoutRow(idempotencyKey, request, cardStatusFailure);
         }
 
         // 4. 시뮬레이션 적용 (지연은 트랜잭션 종료 후 wrapper에서)
@@ -90,7 +100,7 @@ public class PaymentService {
         boolean approved = simulate(config, card);
 
         // 5. 승인번호 생성 + row INSERT
-        ResponseType resultType = approved ? ResponseType.SUCCESS : ResponseType.PAYMENT_REJECTED;
+        ResponseType resultType = approved ? ResponseType.SUCCESS : simulateRejectReasonResolver.resolve(card);
         SimulatorResponseCode rc = responseCodeResolver.resolve(Category.PAYMENT, resultType);
         LocalDateTime performanceDate = LocalDateTime.now();
         SimulatorPaymentHistory saved = insertWithUniqueApprovalNumber(idempotencyKey,
@@ -173,11 +183,14 @@ public class PaymentService {
             return PaymentInquireResponse.builder()
                     .pgId(request.pgId())
                     .idempotencyKey(request.targetIdempotencyKey())
+                    .responseHttp(rc.getResponseHttp())
                     .responseCode(rc.getResponseCode())
+                    .responseReason(rc.getResponseReason())
                     .responseMessage(rc.getResponseMessage())
                     .build();
         }
         SimulatorPaymentHistory row = found.get();
+        SimulatorResponseCode rc = responseCodeResolver.resolveByCode(row.getResponseCode());
         return PaymentInquireResponse.builder()
                 .pgId(row.getPgId())
                 .idempotencyKey(row.getIdempotencyKey())
@@ -186,8 +199,10 @@ public class PaymentService {
                 .approvalNumber(row.getApprovalNumber())
                 .approvedAt(format(row.getCreatedAt()))
                 .approvedAmount(row.getApprovedAmount())
-                .responseCode(row.getResponseCode())
-                .responseMessage(row.getResponseMessage())
+                .responseHttp(rc.getResponseHttp())
+                .responseCode(rc.getResponseCode())
+                .responseReason(rc.getResponseReason())
+                .responseMessage(rc.getResponseMessage())
                 .build();
     }
 
@@ -256,15 +271,18 @@ public class PaymentService {
         return random.nextDouble() * 100.0 < rate;
     }
 
-    private PaymentApproveResponse approveRejectedWithoutRow(String idempotencyKey, PaymentApproveRequest request) {
-        SimulatorResponseCode rc = responseCodeResolver.resolve(Category.PAYMENT, ResponseType.PAYMENT_REJECTED);
+    private PaymentApproveResponse approveRejectedWithoutRow(String idempotencyKey, PaymentApproveRequest request,
+                                                              ResponseType responseType) {
+        SimulatorResponseCode rc = responseCodeResolver.resolve(Category.PAYMENT, responseType);
         return PaymentApproveResponse.builder()
                 .pgId(request.pgId())
                 .idempotencyKey(idempotencyKey)
                 .pgTxnId(request.pgTxnId())
                 .paymentStatus(PaymentStatus.FAILED)
                 .approvedAmount(request.approvedAmount())
+                .responseHttp(rc.getResponseHttp())
                 .responseCode(rc.getResponseCode())
+                .responseReason(rc.getResponseReason())
                 .responseMessage(rc.getResponseMessage())
                 .build();
     }
@@ -277,12 +295,15 @@ public class PaymentService {
                 .idempotencyKey(idempotencyKey)
                 .pgTxnId(request.pgTxnId())
                 .approvalNumber(request.approvalNumber())
+                .responseHttp(rc.getResponseHttp())
                 .responseCode(rc.getResponseCode())
+                .responseReason(rc.getResponseReason())
                 .responseMessage(rc.getResponseMessage())
                 .build();
     }
 
     private PaymentApproveResponse toApproveResponse(SimulatorPaymentHistory row) {
+        SimulatorResponseCode rc = responseCodeResolver.resolveByCode(row.getResponseCode());
         return PaymentApproveResponse.builder()
                 .pgId(row.getPgId())
                 .idempotencyKey(row.getIdempotencyKey())
@@ -291,12 +312,15 @@ public class PaymentService {
                 .approvalNumber(row.getApprovalNumber())
                 .approvedAt(format(row.getCreatedAt()))
                 .approvedAmount(row.getApprovedAmount())
-                .responseCode(row.getResponseCode())
-                .responseMessage(row.getResponseMessage())
+                .responseHttp(rc.getResponseHttp())
+                .responseCode(rc.getResponseCode())
+                .responseReason(rc.getResponseReason())
+                .responseMessage(rc.getResponseMessage())
                 .build();
     }
 
     private PaymentCancelResponse toCancelResponse(SimulatorPaymentHistory row) {
+        SimulatorResponseCode rc = responseCodeResolver.resolveByCode(row.getResponseCode());
         return PaymentCancelResponse.builder()
                 .pgId(row.getPgId())
                 .idempotencyKey(row.getIdempotencyKey())
@@ -305,8 +329,10 @@ public class PaymentService {
                 .approvalNumber(row.getApprovalNumber())
                 .cancelledAt(format(row.getCreatedAt()))
                 .cancelledAmount(row.getApprovedAmount())
-                .responseCode(row.getResponseCode())
-                .responseMessage(row.getResponseMessage())
+                .responseHttp(rc.getResponseHttp())
+                .responseCode(rc.getResponseCode())
+                .responseReason(rc.getResponseReason())
+                .responseMessage(rc.getResponseMessage())
                 .build();
     }
 

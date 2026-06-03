@@ -12,7 +12,9 @@ public record PreApprovalCancelResponse(
         @JsonProperty("pre_approval_status") PreApprovalStatus preApprovalStatus,
         @JsonProperty("pre_approval_number") String preApprovalNumber,
         @JsonProperty("cancelled_at") String cancelledAt,
+        @JsonProperty("response_http") Integer responseHttp,
         @JsonProperty("response_code") String responseCode,
+        @JsonProperty("response_reason") String responseReason,
         @JsonProperty("response_message") String responseMessage
 ) {
 }
