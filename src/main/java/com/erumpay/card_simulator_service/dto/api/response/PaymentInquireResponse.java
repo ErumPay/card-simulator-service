@@ -13,7 +13,9 @@ public record PaymentInquireResponse(
         @JsonProperty("approval_number") String approvalNumber,
         @JsonProperty("approved_at") String approvedAt,
         @JsonProperty("approved_amount") Long approvedAmount,
+        @JsonProperty("response_http") Integer responseHttp,
         @JsonProperty("response_code") String responseCode,
+        @JsonProperty("response_reason") String responseReason,
         @JsonProperty("response_message") String responseMessage
 ) {
 }

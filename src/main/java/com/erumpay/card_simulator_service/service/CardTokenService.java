@@ -91,7 +91,7 @@ public class CardTokenService {
         SimulatorUser user = userRepository.findById(card.getUserId()).orElse(null);
         if (user == null || !user.getBirthDate().equals(aesCryptoUtil.encrypt(request.birthDate()))) {
             return failureResponse(request.pgId(), idempotencyKey, request.cardCompany(),
-                    Category.USER, ResponseType.USER_INVALID_INFO);
+                    Category.USER, ResponseType.USER_BIRTH_INVALID);
         }
 
         // 4. (card_id, pg_id) ACTIVE 토큰 중복 검사
@@ -122,7 +122,9 @@ public class CardTokenService {
                     .cardToken(plainToken)
                     .cardCompany(request.cardCompany())
                     .maskedNumber(card.getMaskedNumber())
+                    .responseHttp(rc.getResponseHttp())
                     .responseCode(rc.getResponseCode())
+                    .responseReason(rc.getResponseReason())
                     .responseMessage(rc.getResponseMessage())
                     .build();
         } catch (DataIntegrityViolationException e) {
@@ -150,7 +152,9 @@ public class CardTokenService {
                     .pgId(request.pgId())
                     .idempotencyKey(idempotencyKey)
                     .cardToken(request.cardToken())
+                    .responseHttp(rc.getResponseHttp())
                     .responseCode(rc.getResponseCode())
+                    .responseReason(rc.getResponseReason())
                     .responseMessage(rc.getResponseMessage())
                     .build();
         }
@@ -160,7 +164,9 @@ public class CardTokenService {
                     .pgId(request.pgId())
                     .idempotencyKey(idempotencyKey)
                     .cardToken(request.cardToken())
+                    .responseHttp(rc.getResponseHttp())
                     .responseCode(rc.getResponseCode())
+                    .responseReason(rc.getResponseReason())
                     .responseMessage(rc.getResponseMessage())
                     .build();
         }
@@ -182,12 +188,15 @@ public class CardTokenService {
     }
 
     private TokenDeleteResponse toDeleteResponse(SimulatorCardToken token, String idempotencyKey) {
+        SimulatorResponseCode rc = responseCodeResolver.resolveByCode(token.getDeleteResponseCode());
         return TokenDeleteResponse.builder()
                 .pgId(token.getPgId())
                 .idempotencyKey(idempotencyKey)
                 .cardToken(token.getCardToken() == null ? null : aesCryptoUtil.decrypt(token.getCardToken()))
-                .responseCode(token.getDeleteResponseCode())
-                .responseMessage(token.getDeleteResponseMessage())
+                .responseHttp(rc.getResponseHttp())
+                .responseCode(rc.getResponseCode())
+                .responseReason(rc.getResponseReason())
+                .responseMessage(rc.getResponseMessage())
                 .build();
     }
 
@@ -198,7 +207,9 @@ public class CardTokenService {
             SimulatorResponseCode rc = responseCodeResolver.resolve(Category.TOKEN, ResponseType.TOKEN_ISSUE_NOT_FOUND);
             return TokenResponse.builder()
                     .idempotencyKey(request.targetIdempotencyKey())
+                    .responseHttp(rc.getResponseHttp())
                     .responseCode(rc.getResponseCode())
+                    .responseReason(rc.getResponseReason())
                     .responseMessage(rc.getResponseMessage())
                     .build();
         }
@@ -209,6 +220,7 @@ public class CardTokenService {
 
     // 발급&조회 시 응답 형식 변환 (API 1, )
     private TokenResponse toResponse(SimulatorCardToken token, String idempotencyKey, SimulatorCard card) {
+        SimulatorResponseCode rc = responseCodeResolver.resolveByCode(token.getIssueResponseCode());
         return TokenResponse.builder()
                 .pgId(token.getPgId())
                 .idempotencyKey(idempotencyKey)
@@ -216,8 +228,10 @@ public class CardTokenService {
                 .cardToken(token.getCardToken() == null ? null : aesCryptoUtil.decrypt(token.getCardToken()))
                 .cardCompany(token.getCardCompany())
                 .maskedNumber(card == null ? null : card.getMaskedNumber())
-                .responseCode(token.getIssueResponseCode())
-                .responseMessage(token.getIssueResponseMessage())
+                .responseHttp(rc.getResponseHttp())
+                .responseCode(rc.getResponseCode())
+                .responseReason(rc.getResponseReason())
+                .responseMessage(rc.getResponseMessage())
                 .build();
     }
 
@@ -232,7 +246,9 @@ public class CardTokenService {
                 .pgId(pgId)
                 .idempotencyKey(idempotencyKey)
                 .cardCompany(cardCompany)
+                .responseHttp(rc.getResponseHttp())
                 .responseCode(rc.getResponseCode())
+                .responseReason(rc.getResponseReason())
                 .responseMessage(rc.getResponseMessage())
                 .build();
     }

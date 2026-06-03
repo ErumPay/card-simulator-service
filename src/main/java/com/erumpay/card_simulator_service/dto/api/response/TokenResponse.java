@@ -13,7 +13,9 @@ public record TokenResponse(
         @JsonProperty("card_token") String cardToken,
         @JsonProperty("card_company") CardCompany cardCompany,
         @JsonProperty("masked_number") String maskedNumber,
+        @JsonProperty("response_http") Integer responseHttp,
         @JsonProperty("response_code") String responseCode,
+        @JsonProperty("response_reason") String responseReason,
         @JsonProperty("response_message") String responseMessage
 ) {
 }

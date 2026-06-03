@@ -18,4 +18,10 @@ public class ResponseCodeResolver {
                 .orElseThrow(() -> new IllegalStateException(
                         "Response code mapping not found: " + category + " / " + responseType));
     }
+
+    public SimulatorResponseCode resolveByCode(String responseCode) {
+        return responseCodeRepository.findByResponseCode(responseCode)
+                .orElseThrow(() -> new IllegalStateException(
+                        "Response code mapping not found: code=" + responseCode));
+    }
 }

@@ -28,8 +28,14 @@ public class SimulatorResponseCode {
     @Column(nullable = false)
     private Category category;
 
+    @Column(name = "response_http", nullable = false)
+    private Integer responseHttp;
+
     @Column(name = "response_code", nullable = false, length = 20)
     private String responseCode;
+
+    @Column(name = "response_reason", nullable = false, length = 50)
+    private String responseReason;
 
     @Column(name = "response_message", nullable = false)
     private String responseMessage;
@@ -39,7 +45,7 @@ public class SimulatorResponseCode {
     private ResponseType responseType;
 
     public enum Category {
-        TOKEN, CARD, PAYMENT, TRANSACTION, USER, SYSTEM
+        TOKEN, CARD, PAYMENT, TRANSACTION, USER
     }
 
     public enum ResponseType {
@@ -47,18 +53,23 @@ public class SimulatorResponseCode {
         CARD_NOT_FOUND,
         CARD_LOST, CARD_EXPIRED, CARD_DELETED,
         CARD_INVALID_EXPIRY, CARD_INVALID_CVC, CARD_INVALID_PASSWORD,
+        CARD_PRODUCT_NOT_FOUND, CARD_NOT_OWNED,
         TOKEN_NOT_FOUND, TOKEN_DUPLICATE, TOKEN_ALREADY_DELETED, TOKEN_ISSUE_NOT_FOUND,
-        PAYMENT_LIMIT_EXCEEDED, PAYMENT_INSUFFICIENT_BALANCE, PAYMENT_REJECTED,
+        PAYMENT_LIMIT_EXCEEDED, PAYMENT_INSUFFICIENT_BALANCE,
+        PAYMENT_CARD_EXPIRED, PAYMENT_CARD_LOST, PAYMENT_CARD_DELETED,
+        PAYMENT_TOKEN_INVALID, PAYMENT_CARD_NOT_FOUND,
         TRANSACTION_NOT_FOUND, TRANSACTION_ALREADY_PROCESSED,
-        USER_NOT_FOUND, USER_INVALID_INFO,
-        SYSTEM_ERROR
+        TRANSACTION_NOT_CANCELABLE, TRANSACTION_MISMATCH, TRANSACTION_TOKEN_MISMATCH,
+        USER_BIRTH_INVALID, USER_PHONE_INVALID
     }
 
     @Builder
-    private SimulatorResponseCode(Category category, String responseCode,
-                                  String responseMessage, ResponseType responseType) {
+    private SimulatorResponseCode(Category category, Integer responseHttp, String responseCode,
+                                  String responseReason, String responseMessage, ResponseType responseType) {
         this.category = category;
+        this.responseHttp = responseHttp;
         this.responseCode = responseCode;
+        this.responseReason = responseReason;
         this.responseMessage = responseMessage;
         this.responseType = responseType;
     }

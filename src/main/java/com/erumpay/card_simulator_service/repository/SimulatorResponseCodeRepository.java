@@ -9,4 +9,6 @@ public interface SimulatorResponseCodeRepository extends JpaRepository<Simulator
 
     Optional<SimulatorResponseCode> findFirstByCategoryAndResponseType(
             SimulatorResponseCode.Category category, SimulatorResponseCode.ResponseType responseType);
+
+    Optional<SimulatorResponseCode> findByResponseCode(String responseCode);
 }

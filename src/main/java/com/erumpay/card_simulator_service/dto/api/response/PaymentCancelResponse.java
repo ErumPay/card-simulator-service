@@ -13,7 +13,9 @@ public record PaymentCancelResponse(
         @JsonProperty("approval_number") String approvalNumber,
         @JsonProperty("cancelled_at") String cancelledAt,
         @JsonProperty("cancelled_amount") Long cancelledAmount,
+        @JsonProperty("response_http") Integer responseHttp,
         @JsonProperty("response_code") String responseCode,
+        @JsonProperty("response_reason") String responseReason,
         @JsonProperty("response_message") String responseMessage
 ) {
 }

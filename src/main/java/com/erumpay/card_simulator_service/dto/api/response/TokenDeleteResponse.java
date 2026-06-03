@@ -8,7 +8,9 @@ public record TokenDeleteResponse(
         @JsonProperty("pg_id") String pgId,
         @JsonProperty("idempotency_key") String idempotencyKey,
         @JsonProperty("card_token") String cardToken,
+        @JsonProperty("response_http") Integer responseHttp,
         @JsonProperty("response_code") String responseCode,
+        @JsonProperty("response_reason") String responseReason,
         @JsonProperty("response_message") String responseMessage
 ) {
 }
