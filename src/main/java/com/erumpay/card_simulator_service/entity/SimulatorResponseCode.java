@@ -31,7 +31,7 @@ public class SimulatorResponseCode {
     @Column(name = "response_http", nullable = false)
     private Integer responseHttp;
 
-    @Column(name = "response_code", nullable = false, length = 20)
+    @Column(name = "response_code", nullable = false, length = 20, unique = true)
     private String responseCode;
 
     @Column(name = "response_reason", nullable = false, length = 50)

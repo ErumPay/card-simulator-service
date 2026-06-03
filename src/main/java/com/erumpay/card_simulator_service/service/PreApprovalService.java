@@ -2,7 +2,6 @@ package com.erumpay.card_simulator_service.service;
 
 import com.erumpay.card_simulator_service.common.AesCryptoUtil;
 import com.erumpay.card_simulator_service.common.CardCompany;
-import com.erumpay.card_simulator_service.common.IinMapping;
 import com.erumpay.card_simulator_service.common.RandomStringGenerator;
 import com.erumpay.card_simulator_service.dto.api.request.PreApprovalCancelRequest;
 import com.erumpay.card_simulator_service.dto.api.response.PreApprovalCancelResponse;
@@ -51,6 +50,7 @@ public class PreApprovalService {
     private final SimulatorCardRepository cardRepository;
     private final SimulatorConfigRepository configRepository;
     private final ResponseCodeResolver responseCodeResolver;
+    private final SimulateRejectReasonResolver simulateRejectReasonResolver;
     private final AesCryptoUtil aesCryptoUtil;
     private final SecureRandom random = new SecureRandom();
 
@@ -108,7 +108,7 @@ public class PreApprovalService {
         boolean approved = simulate(config, card);
 
         // 5. 가승인 번호 + row INSERT
-        ResponseType resultType = approved ? ResponseType.SUCCESS : resolveSimulateRejectReason(card);
+        ResponseType resultType = approved ? ResponseType.SUCCESS : simulateRejectReasonResolver.resolve(card);
         SimulatorResponseCode rc = responseCodeResolver.resolve(Category.PAYMENT, resultType);
         SimulatorPreApproval saved = insertWithUniquePreApprovalNumber(idempotencyKey,
                 () -> SimulatorPreApproval.builder()
@@ -245,14 +245,6 @@ public class PreApprovalService {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
-    }
-
-    // simulate 거절 시 카드형식별 사유 매핑: 신용 = 한도 초과, 체크 = 잔액 부족
-    private ResponseType resolveSimulateRejectReason(SimulatorCard card) {
-        IinMapping.CardForm form = IinMapping.resolveCardForm(aesCryptoUtil.decrypt(card.getCardNumber()));
-        return form == IinMapping.CardForm.CHECK
-                ? ResponseType.PAYMENT_INSUFFICIENT_BALANCE
-                : ResponseType.PAYMENT_LIMIT_EXCEEDED;
     }
 
     private boolean simulate(SimulatorConfig config, SimulatorCard card) {

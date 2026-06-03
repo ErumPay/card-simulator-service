@@ -2,7 +2,6 @@ package com.erumpay.card_simulator_service.service;
 
 import com.erumpay.card_simulator_service.common.AesCryptoUtil;
 import com.erumpay.card_simulator_service.common.CardCompany;
-import com.erumpay.card_simulator_service.common.IinMapping;
 import com.erumpay.card_simulator_service.common.RandomStringGenerator;
 import com.erumpay.card_simulator_service.dto.api.request.PaymentApproveRequest;
 import com.erumpay.card_simulator_service.dto.api.response.PaymentApproveResponse;
@@ -51,6 +50,7 @@ public class PaymentService {
     private final SimulatorCardRepository cardRepository;
     private final SimulatorConfigRepository configRepository;
     private final ResponseCodeResolver responseCodeResolver;
+    private final SimulateRejectReasonResolver simulateRejectReasonResolver;
     private final AesCryptoUtil aesCryptoUtil;
     private final SecureRandom random = new SecureRandom();
 
@@ -100,7 +100,7 @@ public class PaymentService {
         boolean approved = simulate(config, card);
 
         // 5. 승인번호 생성 + row INSERT
-        ResponseType resultType = approved ? ResponseType.SUCCESS : resolveSimulateRejectReason(card);
+        ResponseType resultType = approved ? ResponseType.SUCCESS : simulateRejectReasonResolver.resolve(card);
         SimulatorResponseCode rc = responseCodeResolver.resolve(Category.PAYMENT, resultType);
         LocalDateTime performanceDate = LocalDateTime.now();
         SimulatorPaymentHistory saved = insertWithUniqueApprovalNumber(idempotencyKey,
@@ -285,14 +285,6 @@ public class PaymentService {
                 .responseReason(rc.getResponseReason())
                 .responseMessage(rc.getResponseMessage())
                 .build();
-    }
-
-    // simulate 거절 시 카드형식별 사유 매핑: 신용 = 한도 초과, 체크 = 잔액 부족
-    private ResponseType resolveSimulateRejectReason(SimulatorCard card) {
-        IinMapping.CardForm form = IinMapping.resolveCardForm(aesCryptoUtil.decrypt(card.getCardNumber()));
-        return form == IinMapping.CardForm.CHECK
-                ? ResponseType.PAYMENT_INSUFFICIENT_BALANCE
-                : ResponseType.PAYMENT_LIMIT_EXCEEDED;
     }
 
     private PaymentCancelResponse cancelFailureResponse(String idempotencyKey, PaymentCancelRequest request,
