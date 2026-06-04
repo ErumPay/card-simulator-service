@@ -4,6 +4,7 @@ import com.erumpay.card_simulator_service.entity.SimulatorPaymentHistory.Payment
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 
+// [be] 하지혁 260603 결제 승인 Response DTO
 @Builder
 public record PaymentApproveResponse(
         @JsonProperty("pg_id") String pgId,

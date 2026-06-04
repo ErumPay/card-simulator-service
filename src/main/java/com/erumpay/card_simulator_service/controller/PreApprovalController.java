@@ -25,6 +25,7 @@ public class PreApprovalController {
 
     private final PreApprovalService preApprovalService;
 
+    // [be] 하지혁 260603 PreApproval API 1 : 가승인 요청
     @PostMapping("/request")
     public PreApprovalResponse request(
             @RequestHeader("Idempotency-Key") @NotBlank String idempotencyKey,
@@ -32,6 +33,7 @@ public class PreApprovalController {
         return preApprovalService.request(idempotencyKey, request);
     }
 
+    // [be] 하지혁 260603 PreApproval API 2 : 가승인 취소
     @PostMapping("/cancel")
     public PreApprovalCancelResponse cancel(
             @RequestHeader("Idempotency-Key") @NotBlank String idempotencyKey,
@@ -39,6 +41,7 @@ public class PreApprovalController {
         return preApprovalService.cancel(idempotencyKey, request);
     }
 
+    // [be] 하지혁 260603 PreApproval API 3 : 가승인 조회
     @PostMapping("/inquire")
     public PreApprovalInquireResponse inquire(@RequestBody @Valid PreApprovalInquireRequest request) {
         return preApprovalService.inquire(request);

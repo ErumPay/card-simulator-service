@@ -24,19 +24,19 @@ public class CardTokenController {
 
     private final CardTokenService cardTokenService;
 
-    /* ***** API 1 : Card Token Issue ***** */
+    // [be] 하지혁 260603 CardToken API 1 : 카드사 토큰 발급
     @PostMapping("/issue")
     public TokenResponse issue(@RequestHeader("Idempotency-Key") @NotBlank String idempotencyKey, @RequestBody @Valid TokenIssueRequest request) {
         return cardTokenService.issue(idempotencyKey, request);
     }
 
-    /* ***** API 2 : Card Token Delete ***** */
+    // [be] 하지혁 260603 CardToken API 2 : 카드사 토큰 삭제
     @PostMapping("/delete")
     public TokenDeleteResponse delete(@RequestHeader("Idempotency-Key") @NotBlank String idempotencyKey, @RequestBody @Valid TokenDeleteRequest request) {
         return cardTokenService.delete(idempotencyKey, request);
     }
 
-    /* ***** API 3 : Card Toeken Inquire ***** */
+    // [be] 하지혁 260603 CardToken API 3 : 카드사 토큰 조회
     @PostMapping("/inquire")
     public TokenResponse inquire(@RequestBody @Valid TokenInquireRequest request) {
         return cardTokenService.inquire(request);

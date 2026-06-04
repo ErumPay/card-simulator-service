@@ -4,6 +4,7 @@ import com.erumpay.card_simulator_service.common.CardCompany;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 
+// [be] 하지혁 260603 카드 실적 조회 Response DTO
 @Builder
 public record PerformanceInquireResponse(
         @JsonProperty("card_company") CardCompany cardCompany,

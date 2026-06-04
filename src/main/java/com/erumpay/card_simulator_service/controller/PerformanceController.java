@@ -19,6 +19,7 @@ public class PerformanceController {
 
     private final PerformanceService performanceService;
 
+    // [be] 하지혁 260603 Performance API 1 : 카드 실적 조회
     @PostMapping("/inquire")
     public PerformanceInquireResponse inquire(@RequestBody @Valid PerformanceInquireRequest request) {
         return performanceService.inquire(request);

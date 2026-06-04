@@ -6,14 +6,10 @@ import com.erumpay.card_simulator_service.common.PasswordHashUtil;
 import com.erumpay.card_simulator_service.entity.SimulatorCard;
 import com.erumpay.card_simulator_service.entity.SimulatorCardProduct;
 import com.erumpay.card_simulator_service.entity.SimulatorConfig;
-import com.erumpay.card_simulator_service.entity.SimulatorResponseCode;
-import com.erumpay.card_simulator_service.entity.SimulatorResponseCode.Category;
-import com.erumpay.card_simulator_service.entity.SimulatorResponseCode.ResponseType;
 import com.erumpay.card_simulator_service.entity.SimulatorUser;
 import com.erumpay.card_simulator_service.repository.SimulatorCardProductRepository;
 import com.erumpay.card_simulator_service.repository.SimulatorCardRepository;
 import com.erumpay.card_simulator_service.repository.SimulatorConfigRepository;
-import com.erumpay.card_simulator_service.repository.SimulatorResponseCodeRepository;
 import com.erumpay.card_simulator_service.repository.SimulatorUserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -59,7 +55,6 @@ public class SimulatorDataSeeder implements CommandLineRunner {
     private final SimulatorUserRepository userRepository;
     private final SimulatorCardProductRepository productRepository;
     private final SimulatorCardRepository cardRepository;
-    private final SimulatorResponseCodeRepository responseCodeRepository;
     private final SimulatorConfigRepository configRepository;
     private final AesCryptoUtil aesCryptoUtil;
 
@@ -76,7 +71,6 @@ public class SimulatorDataSeeder implements CommandLineRunner {
         }
 
         seedConfig();
-        seedResponseCodes();
         List<SimulatorCardProduct> products = seedProducts();
 
         List<CardRow> rows = readSeedCsv();
@@ -93,63 +87,6 @@ public class SimulatorDataSeeder implements CommandLineRunner {
                 .delayMs(0)
                 .rejectPattern(null)
                 .build());
-    }
-
-    private void seedResponseCodes() {
-        List<SimulatorResponseCode> codes = List.of(
-                // TOKEN (명세 5개)
-                responseCode(Category.TOKEN, 200, "100", "TOKEN_SUCCESS", "정상 처리되었습니다.", ResponseType.SUCCESS),
-                responseCode(Category.TOKEN, 200, "101", "TOKEN_NOT_FOUND", "토큰을 찾을 수 없습니다.", ResponseType.TOKEN_NOT_FOUND),
-                responseCode(Category.TOKEN, 200, "102", "TOKEN_DUPLICATE", "이미 발급된 토큰이 존재합니다.", ResponseType.TOKEN_DUPLICATE),
-                responseCode(Category.TOKEN, 200, "103", "TOKEN_ALREADY_DELETED", "이미 삭제된 토큰입니다.", ResponseType.TOKEN_ALREADY_DELETED),
-                responseCode(Category.TOKEN, 200, "104", "TOKEN_ISSUE_NOT_FOUND", "발급 이력을 찾을 수 없습니다.", ResponseType.TOKEN_ISSUE_NOT_FOUND),
-
-                // CARD (명세 10개)
-                responseCode(Category.CARD, 200, "200", "CARD_SUCCESS", "정상 처리되었습니다.", ResponseType.SUCCESS),
-                responseCode(Category.CARD, 200, "201", "CARD_LOST", "분실 신고된 카드입니다.", ResponseType.CARD_LOST),
-                responseCode(Category.CARD, 200, "202", "CARD_EXPIRED", "만료된 카드입니다.", ResponseType.CARD_EXPIRED),
-                responseCode(Category.CARD, 200, "203", "CARD_DELETED", "해지된 카드입니다.", ResponseType.CARD_DELETED),
-                responseCode(Category.CARD, 200, "205", "CARD_INVALID_PASSWORD", "비밀번호가 일치하지 않습니다.", ResponseType.CARD_INVALID_PASSWORD),
-                responseCode(Category.CARD, 200, "206", "CARD_NOT_FOUND", "존재하지 않는 카드입니다.", ResponseType.CARD_NOT_FOUND),
-                responseCode(Category.CARD, 200, "207", "CARD_INVALID_EXPIRY", "카드 유효기간이 일치하지 않습니다.", ResponseType.CARD_INVALID_EXPIRY),
-                responseCode(Category.CARD, 200, "208", "CARD_INVALID_CVC", "CVC가 일치하지 않습니다.", ResponseType.CARD_INVALID_CVC),
-                responseCode(Category.CARD, 200, "209", "CARD_PRODUCT_NOT_FOUND", "카드 상품을 찾을 수 없습니다.", ResponseType.CARD_PRODUCT_NOT_FOUND),
-                responseCode(Category.CARD, 200, "210", "CARD_NOT_OWNED", "사용자가 해당 카드를 보유하지 않습니다.", ResponseType.CARD_NOT_OWNED),
-
-                // PAYMENT (명세 8개)
-                responseCode(Category.PAYMENT, 200, "300", "PAYMENT_SUCCESS", "정상 처리되었습니다.", ResponseType.SUCCESS),
-                responseCode(Category.PAYMENT, 200, "301", "PAYMENT_LIMIT_EXCEEDED", "한도를 초과했습니다.", ResponseType.PAYMENT_LIMIT_EXCEEDED),
-                responseCode(Category.PAYMENT, 200, "302", "PAYMENT_INSUFFICIENT_BALANCE", "잔액이 부족합니다.", ResponseType.PAYMENT_INSUFFICIENT_BALANCE),
-                responseCode(Category.PAYMENT, 200, "303", "PAYMENT_CARD_EXPIRED", "만료된 카드입니다.", ResponseType.PAYMENT_CARD_EXPIRED),
-                responseCode(Category.PAYMENT, 200, "304", "PAYMENT_CARD_LOST", "분실 신고된 카드입니다.", ResponseType.PAYMENT_CARD_LOST),
-                responseCode(Category.PAYMENT, 200, "305", "PAYMENT_CARD_DELETED", "해지된 카드입니다.", ResponseType.PAYMENT_CARD_DELETED),
-                responseCode(Category.PAYMENT, 200, "306", "PAYMENT_TOKEN_INVALID", "결제 토큰이 유효하지 않습니다.", ResponseType.PAYMENT_TOKEN_INVALID),
-                responseCode(Category.PAYMENT, 200, "307", "PAYMENT_CARD_NOT_FOUND", "카드 정보를 찾을 수 없습니다.", ResponseType.PAYMENT_CARD_NOT_FOUND),
-
-                // TRANSACTION (명세 5개)
-                responseCode(Category.TRANSACTION, 200, "401", "TRANSACTION_NOT_FOUND", "거래를 찾을 수 없습니다.", ResponseType.TRANSACTION_NOT_FOUND),
-                responseCode(Category.TRANSACTION, 200, "402", "TRANSACTION_ALREADY_PROCESSED", "이미 처리된 거래입니다.", ResponseType.TRANSACTION_ALREADY_PROCESSED),
-                responseCode(Category.TRANSACTION, 200, "403", "TRANSACTION_NOT_CANCELABLE", "취소 불가능한 거래입니다.", ResponseType.TRANSACTION_NOT_CANCELABLE),
-                responseCode(Category.TRANSACTION, 200, "404", "TRANSACTION_MISMATCH", "거래 정보가 일치하지 않습니다.", ResponseType.TRANSACTION_MISMATCH),
-                responseCode(Category.TRANSACTION, 200, "405", "TRANSACTION_TOKEN_MISMATCH", "거래와 토큰이 일치하지 않습니다.", ResponseType.TRANSACTION_TOKEN_MISMATCH),
-
-                // USER (명세 2개)
-                responseCode(Category.USER, 200, "501", "USER_BIRTH_INVALID", "본인 정보가 일치하지 않습니다.", ResponseType.USER_BIRTH_INVALID),
-                responseCode(Category.USER, 200, "502", "USER_PHONE_INVALID", "본인 정보가 일치하지 않습니다.", ResponseType.USER_PHONE_INVALID)
-        );
-        responseCodeRepository.saveAll(codes);
-    }
-
-    private SimulatorResponseCode responseCode(Category category, int http, String code,
-                                                String reason, String message, ResponseType type) {
-        return SimulatorResponseCode.builder()
-                .category(category)
-                .responseHttp(http)
-                .responseCode(code)
-                .responseReason(reason)
-                .responseMessage(message)
-                .responseType(type)
-                .build();
     }
 
     private List<SimulatorCardProduct> seedProducts() {

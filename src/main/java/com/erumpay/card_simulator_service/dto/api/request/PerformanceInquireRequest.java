@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 
+// [be] 하지혁 260603 카드 실적 조회 Request DTO
 public record PerformanceInquireRequest(
         @NotBlank String name,
         @JsonProperty("phone_number") @NotBlank String phoneNumber,

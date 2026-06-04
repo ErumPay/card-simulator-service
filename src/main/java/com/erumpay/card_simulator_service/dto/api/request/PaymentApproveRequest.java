@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
+// [be] 하지혁 260603 결제 Request DTO
 public record PaymentApproveRequest(
         @JsonProperty("pg_id") @NotBlank @Size(max = 20) String pgId,
         @JsonProperty("pg_txn_id") @NotNull @Positive Long pgTxnId,
