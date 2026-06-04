@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
+// [be] 하지혁 260603 가승인 취소 Request DTO
 public record PreApprovalCancelRequest(
         @JsonProperty("pg_id") @NotBlank @Size(max = 20) String pgId,
         @JsonProperty("origin_idempotency_key") @NotBlank String originIdempotencyKey,

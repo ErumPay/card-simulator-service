@@ -98,4 +98,11 @@ public class SimulatorCardToken {
         this.deleteResponseCode = responseCode;
         this.deleteResponseMessage = responseMessage;
     }
+
+    public void markAutoDeleted() {
+        if (this.tokenStatus != TokenStatus.ACTIVE) {
+            throw new IllegalStateException("Only ACTIVE tokens can be auto-deleted. current=" + this.tokenStatus);
+        }
+        this.tokenStatus = TokenStatus.DELETED;
+    }
 }

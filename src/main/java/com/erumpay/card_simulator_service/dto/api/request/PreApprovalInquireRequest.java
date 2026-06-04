@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+// [be] 하지혁 260603 가승인 조회 Request DTO
 public record PreApprovalInquireRequest(
         @JsonProperty("pg_id") @NotBlank @Size(max = 20) String pgId,
         @JsonProperty("card_company") @NotNull CardCompany cardCompany,

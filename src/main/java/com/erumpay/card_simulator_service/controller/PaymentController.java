@@ -25,6 +25,7 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
+    // [be] 하지혁 260603 Payment API 1 : 결제 승인
     @PostMapping("/approve")
     public PaymentApproveResponse approve(
             @RequestHeader("Idempotency-Key") @NotBlank String idempotencyKey,
@@ -32,6 +33,7 @@ public class PaymentController {
         return paymentService.approve(idempotencyKey, request);
     }
 
+    // [be] 하지혁 260603 Payment API 2 : 결제 취소
     @PostMapping("/cancel")
     public PaymentCancelResponse cancel(
             @RequestHeader("Idempotency-Key") @NotBlank String idempotencyKey,
@@ -39,6 +41,7 @@ public class PaymentController {
         return paymentService.cancel(idempotencyKey, request);
     }
 
+    // [be] 하지혁 260603 Payment API 3 : 결제 조회
     @PostMapping("/inquire")
     public PaymentInquireResponse inquire(@RequestBody @Valid PaymentInquireRequest request) {
         return paymentService.inquire(request);

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+// [be] 하지혁 260603 카드사 토큰 발급 Request DTO
 public record TokenIssueRequest(
         @JsonProperty("pg_id") @NotBlank String pgId,
         @JsonProperty("card_company") @NotNull CardCompany cardCompany,
