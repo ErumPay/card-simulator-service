@@ -2,6 +2,8 @@ package com.erumpay.card_simulator_service.controller;
 
 import com.erumpay.card_simulator_service.dto.api.request.PreApprovalCancelRequest;
 import com.erumpay.card_simulator_service.dto.api.response.PreApprovalCancelResponse;
+import com.erumpay.card_simulator_service.dto.api.request.PreApprovalCaptureRequest;
+import com.erumpay.card_simulator_service.dto.api.response.PreApprovalCaptureResponse;
 import com.erumpay.card_simulator_service.dto.api.request.PreApprovalInquireRequest;
 import com.erumpay.card_simulator_service.dto.api.response.PreApprovalInquireResponse;
 import com.erumpay.card_simulator_service.dto.api.request.PreApprovalRequest;
@@ -45,5 +47,13 @@ public class PreApprovalController {
     @PostMapping("/inquire")
     public PreApprovalInquireResponse inquire(@RequestBody @Valid PreApprovalInquireRequest request) {
         return preApprovalService.inquire(request);
+    }
+
+    // [be] 하지혁 260604 PreApproval API 4 : 가승인 캡쳐 (가승인 → 결제 확정)
+    @PostMapping("/capture")
+    public PreApprovalCaptureResponse capture(
+            @RequestHeader("Idempotency-Key") @NotBlank String idempotencyKey,
+            @RequestBody @Valid PreApprovalCaptureRequest request) {
+        return preApprovalService.capture(idempotencyKey, request);
     }
 }

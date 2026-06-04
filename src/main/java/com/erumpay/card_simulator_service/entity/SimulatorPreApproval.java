@@ -75,7 +75,7 @@ public class SimulatorPreApproval {
     private LocalDateTime updatedAt;
 
     public enum PreApprovalStatus {
-        AUTHORIZED, CANCELED, FAILED
+        AUTHORIZED, CANCELED, CAPTURED, FAILED
     }
 
     @Builder
@@ -103,6 +103,16 @@ public class SimulatorPreApproval {
         }
         this.preApprovalStatus = PreApprovalStatus.CANCELED;
         this.cancelIdempotencyKey = cancelIdempotencyKey;
+        this.responseCode = responseCode;
+        this.responseMessage = responseMessage;
+    }
+
+    public void capture(String responseCode, String responseMessage) {
+        if (this.preApprovalStatus != PreApprovalStatus.AUTHORIZED) {
+            throw new IllegalStateException(
+                    "Only AUTHORIZED pre-approval can be captured. current=" + this.preApprovalStatus);
+        }
+        this.preApprovalStatus = PreApprovalStatus.CAPTURED;
         this.responseCode = responseCode;
         this.responseMessage = responseMessage;
     }

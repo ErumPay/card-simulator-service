@@ -6,6 +6,8 @@ import com.erumpay.card_simulator_service.common.RandomStringGenerator;
 import com.erumpay.card_simulator_service.common.SimResponseCode;
 import com.erumpay.card_simulator_service.dto.api.request.PreApprovalCancelRequest;
 import com.erumpay.card_simulator_service.dto.api.response.PreApprovalCancelResponse;
+import com.erumpay.card_simulator_service.dto.api.request.PreApprovalCaptureRequest;
+import com.erumpay.card_simulator_service.dto.api.response.PreApprovalCaptureResponse;
 import com.erumpay.card_simulator_service.dto.api.request.PreApprovalInquireRequest;
 import com.erumpay.card_simulator_service.dto.api.response.PreApprovalInquireResponse;
 import com.erumpay.card_simulator_service.dto.api.request.PreApprovalRequest;
@@ -14,11 +16,14 @@ import com.erumpay.card_simulator_service.entity.SimulatorCard;
 import com.erumpay.card_simulator_service.entity.SimulatorCardToken;
 import com.erumpay.card_simulator_service.entity.SimulatorCardToken.TokenStatus;
 import com.erumpay.card_simulator_service.entity.SimulatorConfig;
+import com.erumpay.card_simulator_service.entity.SimulatorPaymentHistory;
+import com.erumpay.card_simulator_service.entity.SimulatorPaymentHistory.PaymentStatus;
 import com.erumpay.card_simulator_service.entity.SimulatorPreApproval;
 import com.erumpay.card_simulator_service.entity.SimulatorPreApproval.PreApprovalStatus;
 import com.erumpay.card_simulator_service.repository.SimulatorCardRepository;
 import com.erumpay.card_simulator_service.repository.SimulatorCardTokenRepository;
 import com.erumpay.card_simulator_service.repository.SimulatorConfigRepository;
+import com.erumpay.card_simulator_service.repository.SimulatorPaymentHistoryRepository;
 import com.erumpay.card_simulator_service.repository.SimulatorPreApprovalRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +49,7 @@ public class PreApprovalService {
     private static final int APPROVAL_NUMBER_MAX_RETRY = 3;
 
     private final SimulatorPreApprovalRepository preApprovalRepository;
+    private final SimulatorPaymentHistoryRepository paymentHistoryRepository;
     private final SimulatorCardTokenRepository tokenRepository;
     private final SimulatorCardRepository cardRepository;
     private final SimulatorConfigRepository configRepository;
@@ -174,6 +180,68 @@ public class PreApprovalService {
             throw e;
         }
         return toCancelResponse(origin, request.pgTxnId());
+    }
+
+    // [be] 하지혁 260604 PreApproval API 4 : 가승인 캡쳐 (가승인 → 결제 확정)
+    @Transactional
+    public PreApprovalCaptureResponse capture(String idempotencyKey, PreApprovalCaptureRequest request) {
+        // 1. capture idempotency-Key 기반 중복 요청 검사 (payment_history에 저장됨)
+        var existingCapture = paymentHistoryRepository.findByIdempotencyKey(idempotencyKey);
+        if (existingCapture.isPresent()) {
+            return toCaptureResponse(existingCapture.get());
+        }
+
+        // 2. 동일 origin 중복 capture 방어
+        var existingByOrigin = paymentHistoryRepository
+                .findByOriginIdempotencyKeyAndPaymentStatus(request.originIdempotencyKey(), PaymentStatus.APPROVED);
+        if (existingByOrigin.isPresent()) {
+            return captureFailureResponse(idempotencyKey, request, SimResponseCode.TRANSACTION_ALREADY_PROCESSED);
+        }
+
+        // 3. 원 가승인 조회
+        var originOpt = preApprovalRepository.findByAuthorizeIdempotencyKey(request.originIdempotencyKey());
+        // 원거래 미존재 예외처리
+        if (originOpt.isEmpty()) {
+            return captureFailureResponse(idempotencyKey, request, SimResponseCode.TRANSACTION_NOT_FOUND);
+        }
+        SimulatorPreApproval origin = originOpt.get();
+        // 원거래 상태 예외처리 (AUTHORIZED만 capture 가능)
+        if (origin.getPreApprovalStatus() != PreApprovalStatus.AUTHORIZED) {
+            return captureFailureResponse(idempotencyKey, request, SimResponseCode.TRANSACTION_NOT_FOUND);
+        }
+
+        // 4. 원거래 일관성 검증 (PG 거래 ID, 가승인 번호)
+        if (!origin.getPgTxnId().equals(request.originPgTxnId())
+                || !origin.getPreApprovalNumber().equals(request.preApprovalNumber())) {
+            return captureFailureResponse(idempotencyKey, request, SimResponseCode.TRANSACTION_NOT_FOUND);
+        }
+
+        // 5. 토큰 일치 검증
+        SimulatorCardToken token = findActiveToken(request.cardCompany(), request.cardToken());
+        if (token == null || !token.getCardId().equals(origin.getCardId())) {
+            return captureFailureResponse(idempotencyKey, request, SimResponseCode.TRANSACTION_NOT_FOUND);
+        }
+
+        // 6. 카드 상태 재검증 (capture 시점에도 LOST/EXPIRED/DELETED 차단)
+        SimulatorCard card = cardRepository.findById(origin.getCardId()).orElse(null);
+        if (card == null) {
+            return captureFailureResponse(idempotencyKey, request, SimResponseCode.PAYMENT_CARD_NOT_FOUND);
+        }
+        SimResponseCode cardStatusFailure = switch (card.getCardStatus()) {
+            case ACTIVE -> null;
+            case LOST -> SimResponseCode.PAYMENT_CARD_LOST;
+            case EXPIRED -> SimResponseCode.PAYMENT_CARD_EXPIRED;
+            case DELETED -> SimResponseCode.PAYMENT_CARD_DELETED;
+        };
+        if (cardStatusFailure != null) {
+            return captureFailureResponse(idempotencyKey, request, cardStatusFailure);
+        }
+
+        // 7. 가승인 상태 전이 (AUTHORIZED → CAPTURED) + payment_history INSERT
+        SimResponseCode rc = SimResponseCode.PAYMENT_SUCCESS;
+        origin.capture(rc.getResponseCode(), rc.getResponseMessage());
+        SimulatorPaymentHistory captured = insertCapturePayment(idempotencyKey, request, origin, rc);
+        return toCaptureResponse(captured);
     }
 
     // [be] 하지혁 260603 PreApproval API 3 : 가승인 조회
@@ -341,6 +409,78 @@ public class PreApprovalService {
                 .preApprovalStatus(row.getPreApprovalStatus())
                 .preApprovalNumber(row.getPreApprovalNumber())
                 .cancelledAt(format(row.getUpdatedAt()))
+                .responseHttp(rc.getResponseHttp())
+                .responseCode(rc.getResponseCode())
+                .responseReason(rc.getResponseReason())
+                .responseMessage(rc.getResponseMessage())
+                .build();
+    }
+
+    // 캡쳐 결제 row INSERT. approval_number는 원 가승인 번호 그대로 사용, 충돌 시 새 번호 채번 (API 4)
+    private SimulatorPaymentHistory insertCapturePayment(String captureKey,
+                                                         PreApprovalCaptureRequest request,
+                                                         SimulatorPreApproval origin,
+                                                         SimResponseCode rc) {
+        String approvalNumber = origin.getPreApprovalNumber();
+        for (int attempt = 0; attempt < APPROVAL_NUMBER_MAX_RETRY; attempt++) {
+            try {
+                return paymentHistoryRepository.save(SimulatorPaymentHistory.builder()
+                        .cardId(origin.getCardId())
+                        .cardCompany(origin.getCardCompany())
+                        .pgId(request.pgId())
+                        .pgTxnId(request.pgTxnId())
+                        .originPgTxnId(origin.getPgTxnId())
+                        .idempotencyKey(captureKey)
+                        .originIdempotencyKey(origin.getAuthorizeIdempotencyKey())
+                        .paymentStatus(PaymentStatus.APPROVED)
+                        .originalAmount(origin.getOriginalAmount())
+                        .approvedAmount(origin.getApprovedAmount())
+                        .performanceDate(LocalDateTime.now())
+                        .approvalNumber(approvalNumber)
+                        .responseCode(rc.getResponseCode())
+                        .responseMessage(rc.getResponseMessage())
+                        .build());
+            } catch (DataIntegrityViolationException e) {
+                // 동시 요청으로 동일 idempotency_key 선행 INSERT → 기존 row echo
+                var existing = paymentHistoryRepository.findByIdempotencyKey(captureKey);
+                if (existing.isPresent()) {
+                    return existing.get();
+                }
+                // approval_number 충돌로 간주, 새 번호로 재시도
+                approvalNumber = RandomStringGenerator.generateHex(APPROVAL_NUMBER_LENGTH);
+                if (attempt == APPROVAL_NUMBER_MAX_RETRY - 1) {
+                    throw e;
+                }
+            }
+        }
+        throw new IllegalStateException("capture payment approval_number 생성 재시도 실패");
+    }
+
+    // 캡쳐 처리 실패 시 에러 응답 (API 4)
+    private PreApprovalCaptureResponse captureFailureResponse(String idempotencyKey,
+                                                              PreApprovalCaptureRequest request,
+                                                              SimResponseCode rc) {
+        return PreApprovalCaptureResponse.builder()
+                .pgId(request.pgId())
+                .idempotencyKey(idempotencyKey)
+                .pgTxnId(request.pgTxnId())
+                .responseHttp(rc.getResponseHttp())
+                .responseCode(rc.getResponseCode())
+                .responseReason(rc.getResponseReason())
+                .responseMessage(rc.getResponseMessage())
+                .build();
+    }
+
+    // payment_history row → 캡쳐 응답 매핑 (API 4)
+    private PreApprovalCaptureResponse toCaptureResponse(SimulatorPaymentHistory row) {
+        SimResponseCode rc = SimResponseCode.ofCode(row.getResponseCode());
+        return PreApprovalCaptureResponse.builder()
+                .pgId(row.getPgId())
+                .idempotencyKey(row.getIdempotencyKey())
+                .pgTxnId(row.getPgTxnId())
+                .paymentStatus(row.getPaymentStatus())
+                .approvalNumber(row.getApprovalNumber())
+                .approvedAt(format(row.getCreatedAt()))
                 .responseHttp(rc.getResponseHttp())
                 .responseCode(rc.getResponseCode())
                 .responseReason(rc.getResponseReason())
