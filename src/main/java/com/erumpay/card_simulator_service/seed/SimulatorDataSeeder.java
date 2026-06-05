@@ -6,11 +6,16 @@ import com.erumpay.card_simulator_service.common.PasswordHashUtil;
 import com.erumpay.card_simulator_service.entity.SimulatorCard;
 import com.erumpay.card_simulator_service.entity.SimulatorCardProduct;
 import com.erumpay.card_simulator_service.entity.SimulatorConfig;
+import com.erumpay.card_simulator_service.entity.SimulatorPaymentHistory;
+import com.erumpay.card_simulator_service.entity.SimulatorPaymentHistory.PaymentStatus;
 import com.erumpay.card_simulator_service.entity.SimulatorUser;
 import com.erumpay.card_simulator_service.repository.SimulatorCardProductRepository;
 import com.erumpay.card_simulator_service.repository.SimulatorCardRepository;
 import com.erumpay.card_simulator_service.repository.SimulatorConfigRepository;
+import com.erumpay.card_simulator_service.repository.SimulatorPaymentHistoryRepository;
 import com.erumpay.card_simulator_service.repository.SimulatorUserRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,17 +26,23 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 @Component
 @ConditionalOnProperty(value = "simulator.seed.enabled", havingValue = "true")
@@ -56,29 +67,52 @@ public class SimulatorDataSeeder implements CommandLineRunner {
     private final SimulatorCardProductRepository productRepository;
     private final SimulatorCardRepository cardRepository;
     private final SimulatorConfigRepository configRepository;
+    private final SimulatorPaymentHistoryRepository paymentRepository;
     private final AesCryptoUtil aesCryptoUtil;
+    private final ObjectMapper objectMapper;
 
     // 사용자/카드 시드는 .env 와 동일 위치(프로젝트 루트)의 seed.csv 에서 읽는다.
     @Value("${simulator.seed.csv-path:seed.csv}")
     private String csvPath;
 
+    // tier 임계값 입력 (extract_tier_thresholds.py 산출물)
+    @Value("${simulator.seed.tier-thresholds-path:tier-thresholds.json}")
+    private String tierThresholdsPath;
+
+    // 결제이력 시드 결과 요약 (Postman 검증 정답표)
+    @Value("${simulator.seed.performance-summary-path:performance-seed-summary.csv}")
+    private String performanceSummaryPath;
+
     @Override
     @Transactional
     public void run(String... args) {
-        if (userRepository.count() > 0) {
-            log.info("Simulator data already seeded. Skip.");
-            return;
+        boolean userFresh = userRepository.count() == 0;
+        boolean paymentEmpty = paymentRepository.count() == 0;
+
+        if (userFresh) {
+            seedConfig();
+            List<SimulatorCardProduct> products = seedProducts();
+
+            List<CardRow> rows = readSeedCsv();
+            Map<String, SimulatorUser> usersByKey = seedUsers(rows);
+            List<SimulatorCard> savedCards = seedCards(rows, usersByKey, products);
+
+            log.info("Simulator base data seeded. users={}, products={}, cards={}",
+                    usersByKey.size(), products.size(), savedCards.size());
+
+            if (paymentEmpty) {
+                seedPaymentHistory(savedCards, products, new ArrayList<>(usersByKey.values()));
+            }
+        } else if (paymentEmpty) {
+            log.info("User/card already seeded; adding payment history only.");
+            List<SimulatorCard> cards = cardRepository.findAll();
+            List<SimulatorCardProduct> products = productRepository.findAll();
+            List<SimulatorUser> users = userRepository.findAll();
+            seedPaymentHistory(cards, products, users);
+        } else {
+            log.info("Simulator data already seeded (users={}, payments={}). Skip.",
+                    userRepository.count(), paymentRepository.count());
         }
-
-        seedConfig();
-        List<SimulatorCardProduct> products = seedProducts();
-
-        List<CardRow> rows = readSeedCsv();
-        Map<String, SimulatorUser> usersByKey = seedUsers(rows);
-        seedCards(rows, usersByKey, products);
-
-        log.info("Simulator data seeded successfully. users={}, products={}, cards={}",
-                usersByKey.size(), products.size(), rows.size());
     }
 
     private void seedConfig() {
@@ -125,8 +159,8 @@ public class SimulatorDataSeeder implements CommandLineRunner {
     }
 
     // 카드는 CSV 행 그대로 생성한다. 카드↔상품 매핑은 카드번호 앞 6자리(mockBin)로 카탈로그 상품을 찾는다.
-    private void seedCards(List<CardRow> rows, Map<String, SimulatorUser> usersByKey,
-                           List<SimulatorCardProduct> products) {
+    private List<SimulatorCard> seedCards(List<CardRow> rows, Map<String, SimulatorUser> usersByKey,
+                                          List<SimulatorCardProduct> products) {
         Map<String, SimulatorCardProduct> productByBin = new HashMap<>();
         for (int i = 0; i < products.size(); i++) {
             productByBin.put(CardProductCatalog.PRODUCTS.get(i).mockBin(), products.get(i));
@@ -143,7 +177,7 @@ public class SimulatorDataSeeder implements CommandLineRunner {
             }
             cards.add(buildCard(owner, product, row));
         }
-        cardRepository.saveAll(cards);
+        return cardRepository.saveAll(cards);
     }
 
     private SimulatorCard buildCard(SimulatorUser user, SimulatorCardProduct product, CardRow row) {
@@ -278,5 +312,243 @@ public class SimulatorDataSeeder implements CommandLineRunner {
         String userKey() {
             return name + "|" + phoneNumber + "|" + birthDate;
         }
+    }
+
+    // ============================================================
+    // 결제이력 시드 (실적 조회 API 테스트용)
+    // ============================================================
+
+    private static final long DEFAULT_MIN_THRESHOLD = 300_000L;
+    private static final long BASE_PG_TXN_ID = 9_000_000_000L; // 시드 전용 high range
+    private static final String SEED_PG_ID = "001";
+    private static final String SEED_RESPONSE_CODE = "SIM-PAYMENT-300";
+    private static final String SEED_RESPONSE_MESSAGE = "정상 처리되었습니다.";
+    private static final YearMonth TARGET_PERIOD = YearMonth.of(2026, 5);
+    private static final int CARDS_PER_USER = 6;
+    private static final long RNG_SEED = 42L;
+
+    private enum Scenario {
+        SUFFICIENT_RICH("충족-여유"),
+        SUFFICIENT_EDGE("충족-경계"),
+        NEAR_MISS("근접-미달"),
+        INSUFFICIENT("미달");
+
+        final String label;
+
+        Scenario(String label) {
+            this.label = label;
+        }
+    }
+
+    private record TierData(List<Long> tierMins, List<Long> tierMaxes, boolean hasZeroTier) {
+    }
+
+    private void seedPaymentHistory(List<SimulatorCard> cards,
+                                    List<SimulatorCardProduct> products,
+                                    List<SimulatorUser> users) {
+        Map<String, TierData> thresholds = loadTierThresholds();
+
+        Map<Long, SimulatorCardProduct> productById = new HashMap<>();
+        for (SimulatorCardProduct p : products) {
+            productById.put(p.getProductId(), p);
+        }
+        Map<Long, SimulatorUser> userById = new HashMap<>();
+        for (SimulatorUser u : users) {
+            userById.put(u.getUserId(), u);
+        }
+
+        // 시드 순서 보장 위해 card_id 오름차순 정렬
+        List<SimulatorCard> sorted = cards.stream()
+                .sorted(Comparator.comparing(SimulatorCard::getCardId))
+                .toList();
+
+        LocalDateTime monthStart = TARGET_PERIOD.atDay(1).atStartOfDay();
+        Random rand = new Random(RNG_SEED);
+        Scenario[] rotation = Scenario.values();
+
+        List<SimulatorPaymentHistory> payments = new ArrayList<>();
+        List<String[]> csvRows = new ArrayList<>();
+        long globalSeq = 0L;
+        int normalIdx = 0;
+
+        for (int i = 0; i < sorted.size(); i++) {
+            SimulatorCard card = sorted.get(i);
+            SimulatorCardProduct product = productById.get(card.getProductId());
+            SimulatorUser user = userById.get(card.getUserId());
+
+            String key = product.getCardCompany().getDisplayName() + "|" + product.getProductName();
+            TierData td = thresholds.get(key);
+
+            Scenario scenario;
+            long minTier;
+            long maxTier;
+            String note;
+            long targetSum;
+
+            if (td == null) {
+                // no tier data — default 적용 + 4시나리오 로테이션
+                scenario = rotation[normalIdx++ % rotation.length];
+                minTier = DEFAULT_MIN_THRESHOLD;
+                maxTier = DEFAULT_MIN_THRESHOLD;
+                targetSum = computeTargetSum(scenario, minTier, maxTier);
+                note = "no tier data; default 300000 applied";
+            } else if (td.tierMins().isEmpty() && td.hasZeroTier()) {
+                // zero-only tier — 실적 무관 카드. 충족-여유 단일 시나리오.
+                scenario = Scenario.SUFFICIENT_RICH;
+                minTier = 0L;
+                maxTier = 0L;
+                targetSum = DEFAULT_MIN_THRESHOLD;
+                note = "zero-tier only (실적 무관)";
+            } else if (td.tierMins().isEmpty()) {
+                // 데이터 없음 (방어적 분기)
+                scenario = rotation[normalIdx++ % rotation.length];
+                minTier = DEFAULT_MIN_THRESHOLD;
+                maxTier = DEFAULT_MIN_THRESHOLD;
+                targetSum = computeTargetSum(scenario, minTier, maxTier);
+                note = "no usable tier; default 300000 applied";
+            } else {
+                scenario = rotation[normalIdx++ % rotation.length];
+                minTier = td.tierMins().get(0);
+                maxTier = td.tierMins().get(td.tierMins().size() - 1);
+                targetSum = computeTargetSum(scenario, minTier, maxTier);
+                note = "";
+            }
+
+            int rowCount = 6 + rand.nextInt(5); // 6~10
+            long perRow = targetSum / rowCount;
+            long remainder = targetSum - perRow * rowCount;
+
+            int userIdx = (i / CARDS_PER_USER) + 1;
+            int cardIdx = (i % CARDS_PER_USER) + 1;
+
+            long actualSum = 0L;
+            for (int r = 0; r < rowCount; r++) {
+                globalSeq++;
+                long amount = perRow + (r == 0 ? remainder : 0L);
+                actualSum += amount;
+
+                // 5월 1~30일에 균등 분산 (월별 결제 기준)
+                int dayOffset = (r * 30) / rowCount;
+                LocalDateTime perfDate = monthStart.plusDays(dayOffset).plusHours(12);
+
+                String idem = String.format("SEED-PAY-%02d-%02d-%03d", userIdx, cardIdx, r + 1);
+                String approvalNum = String.format("SEEDAPRV%02d%02d%03d", userIdx, cardIdx, r + 1);
+
+                payments.add(SimulatorPaymentHistory.builder()
+                        .cardId(card.getCardId())
+                        .cardCompany(card.getCardCompany())
+                        .pgId(SEED_PG_ID)
+                        .pgTxnId(BASE_PG_TXN_ID + globalSeq)
+                        .idempotencyKey(idem)
+                        .paymentStatus(PaymentStatus.APPROVED)
+                        .originalAmount(amount)
+                        .approvedAmount(amount)
+                        .performanceDate(perfDate)
+                        .approvalNumber(approvalNum)
+                        .responseCode(SEED_RESPONSE_CODE)
+                        .responseMessage(SEED_RESPONSE_MESSAGE)
+                        .build());
+            }
+
+            csvRows.add(new String[]{
+                    user.getName(),
+                    aesCryptoUtil.decrypt(user.getPhoneNumber()),
+                    product.getCardCompany().getDisplayName(),
+                    product.getProductName(),
+                    String.valueOf(card.getCardId()),
+                    card.getCardStatus().name(),
+                    TARGET_PERIOD.format(DateTimeFormatter.ofPattern("yyyyMM")),
+                    String.valueOf(minTier),
+                    String.valueOf(maxTier),
+                    scenario.label,
+                    String.valueOf(actualSum),
+                    String.valueOf(rowCount),
+                    note,
+            });
+        }
+
+        paymentRepository.saveAll(payments);
+        writePerformanceSummaryCsv(csvRows);
+
+        log.info("Payment history seeded: {} rows across {} cards, summary CSV: {}",
+                payments.size(), sorted.size(), Path.of(performanceSummaryPath).toAbsolutePath());
+    }
+
+    private long computeTargetSum(Scenario s, long minTier, long maxTier) {
+        return switch (s) {
+            case SUFFICIENT_RICH -> Math.round(maxTier * 1.2);
+            case SUFFICIENT_EDGE -> Math.round(minTier * 1.05);
+            case NEAR_MISS -> Math.round(minTier * 0.95);
+            case INSUFFICIENT -> minTier / 2;
+        };
+    }
+
+    private Map<String, TierData> loadTierThresholds() {
+        Path path = Path.of(tierThresholdsPath);
+        if (!Files.exists(path)) {
+            throw new IllegalStateException("Tier thresholds JSON not found: " + path.toAbsolutePath()
+                    + " (run extract_tier_thresholds.py first)");
+        }
+        try {
+            Map<String, RawTierEntry> raw = objectMapper.readValue(
+                    path.toFile(),
+                    new TypeReference<Map<String, RawTierEntry>>() {
+                    });
+            Map<String, TierData> out = new HashMap<>();
+            for (Map.Entry<String, RawTierEntry> e : raw.entrySet()) {
+                RawTierEntry r = e.getValue();
+                List<Long> mins = r.tier_mins == null ? List.of() : r.tier_mins;
+                List<Long> maxes = r.tier_maxes == null ? List.of() : r.tier_maxes;
+                out.put(e.getKey(), new TierData(mins, maxes, r.has_zero_tier));
+            }
+            return out;
+        } catch (IOException e) {
+            throw new UncheckedIOException("Failed to read tier thresholds: " + path.toAbsolutePath(), e);
+        }
+    }
+
+    // JSON 매핑 전용 (snake_case 그대로). 외부에서 직접 안 씀.
+    @SuppressWarnings("checkstyle:MemberName")
+    static final class RawTierEntry {
+        public String source_card_id;
+        public List<Long> tier_mins;
+        public List<Long> tier_maxes;
+        public boolean has_zero_tier;
+        public int tier_count_total;
+    }
+
+    private void writePerformanceSummaryCsv(List<String[]> rows) {
+        Path path = Path.of(performanceSummaryPath);
+        try (BufferedWriter w = Files.newBufferedWriter(path, StandardCharsets.UTF_8)) {
+            w.write("# Generated by SimulatorDataSeeder. inquiry_period 테스트 시 202605 사용.\n");
+            w.write("# card_id_assumed: fresh DB(simulator_db drop+create) 기준 seed.csv 순서 1~48 가정.\n");
+            w.write("# 재기동/누적 시 실제 card_id 는 다를 수 있으며, 직접 조정 필요.\n");
+            w.write(String.join(",",
+                    "user_name", "user_phone", "card_company", "product_name",
+                    "card_id_assumed", "card_status", "inquiry_period",
+                    "min_tier_threshold", "max_tier_threshold", "scenario",
+                    "expected_currentAmount", "row_count", "note"));
+            w.write("\n");
+            for (String[] row : rows) {
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < row.length; i++) {
+                    if (i > 0) sb.append(',');
+                    sb.append(csvEscape(row[i]));
+                }
+                sb.append('\n');
+                w.write(sb.toString());
+            }
+            log.info("Performance summary CSV written: {}", path.toAbsolutePath());
+        } catch (IOException e) {
+            // CSV 미생성은 시드 자체 성공을 가로막지 않는다 (컨테이너 RO FS 등 환경 이슈).
+            log.warn("Failed to write performance summary CSV ({}): {}", path.toAbsolutePath(), e.getMessage());
+        }
+    }
+
+    private static String csvEscape(String s) {
+        if (s == null) return "";
+        boolean needsQuote = s.indexOf(',') >= 0 || s.indexOf('"') >= 0 || s.indexOf('\n') >= 0;
+        if (!needsQuote) return s;
+        return "\"" + s.replace("\"", "\"\"") + "\"";
     }
 }

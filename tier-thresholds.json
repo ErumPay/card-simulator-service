@@ -1,0 +1,2066 @@
+{
+  "우리카드|카드의정석 SHOPPING+": {
+    "source_card_id": "2687",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 10
+  },
+  "삼성카드|삼성 iD SELECT ALL 카드": {
+    "source_card_id": "2885",
+    "tier_mins": [
+      400000,
+      800000,
+      1200000
+    ],
+    "tier_maxes": [
+      null,
+      1200000,
+      null
+    ],
+    "has_zero_tier": true,
+    "tier_count_total": 49
+  },
+  "신한카드|신한카드 Mr.Life": {
+    "source_card_id": "13",
+    "tier_mins": [
+      300000,
+      500000,
+      1000000
+    ],
+    "tier_maxes": [
+      null,
+      1000000,
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 36
+  },
+  "삼성카드|삼성카드 & MILEAGE PLATINUM (스카이패스)": {
+    "source_card_id": "49",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 6
+  },
+  "현대카드|현대카드ZERO Edition3(할인형)": {
+    "source_card_id": "2646",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 1
+  },
+  "KB국민카드|KB국민 My WE:SH 카드": {
+    "source_card_id": "2441",
+    "tier_mins": [
+      400000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 13
+  },
+  "롯데카드|LOCA 365 카드": {
+    "source_card_id": "2330",
+    "tier_mins": [
+      500000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 8
+  },
+  "신한카드|신한카드 Discount Plan+": {
+    "source_card_id": "2835",
+    "tier_mins": [
+      300000,
+      400000,
+      800000,
+      1200000,
+      1500000,
+      1800000
+    ],
+    "tier_maxes": [
+      null,
+      null,
+      1200000,
+      1800000,
+      null,
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 32
+  },
+  "삼성카드|THE 1 (스카이패스)": {
+    "source_card_id": "1909",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": true,
+    "tier_count_total": 6
+  },
+  "현대카드|American Express® Gold Card Edition2": {
+    "source_card_id": "2663",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": false,
+    "tier_count_total": 0
+  },
+  "삼성카드|삼성카드 taptap O": {
+    "source_card_id": "51",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 3
+  },
+  "신한카드|신한카드 Simple Plan+": {
+    "source_card_id": "2950",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 5
+  },
+  "롯데카드|LOCA LIKIT 1.2": {
+    "source_card_id": "2261",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 3
+  },
+  "KB국민카드|굿데이카드": {
+    "source_card_id": "106",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 15
+  },
+  "삼성카드|삼성 iD SELECT ON 카드": {
+    "source_card_id": "2886",
+    "tier_mins": [
+      300000,
+      600000
+    ],
+    "tier_maxes": [
+      null,
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 9
+  },
+  "신한카드|신한카드 처음(ANNIVERSE)": {
+    "source_card_id": "2759",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 10
+  },
+  "신한카드|신한카드 Deep Oil": {
+    "source_card_id": "39",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 12
+  },
+  "KB국민카드|쿠팡 와우카드": {
+    "source_card_id": "2609",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 4
+  },
+  "NH농협카드|올바른 FLEX 카드": {
+    "source_card_id": "666",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 7
+  },
+  "우리카드|스타트래블 우리카드": {
+    "source_card_id": "2953",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 7
+  },
+  "KB국민카드|WE:SH Travel": {
+    "source_card_id": "2685",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 1
+  },
+  "삼성카드|삼성 iD SIMPLE 카드": {
+    "source_card_id": "2376",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": true,
+    "tier_count_total": 4
+  },
+  "우리카드|카드의정석2": {
+    "source_card_id": "2848",
+    "tier_mins": [
+      500000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 2
+  },
+  "현대카드|현대카드ZERO Edition3(포인트형)": {
+    "source_card_id": "2647",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 1
+  },
+  "롯데카드|디지로카 London": {
+    "source_card_id": "2632",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 2
+  },
+  "현대카드|대한항공카드 300": {
+    "source_card_id": "2711",
+    "tier_mins": [
+      500000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 3
+  },
+  "KB국민카드|KB YOU Prime 카드": {
+    "source_card_id": "2930",
+    "tier_mins": [
+      400000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 16
+  },
+  "삼성카드|taptap DIGITAL": {
+    "source_card_id": "657",
+    "tier_mins": [
+      300000,
+      600000,
+      900000
+    ],
+    "tier_maxes": [
+      null,
+      null,
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 6
+  },
+  "삼성카드|삼성 iD GLOBAL 카드": {
+    "source_card_id": "2676",
+    "tier_mins": [
+      500000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": true,
+    "tier_count_total": 14
+  },
+  "우리카드|우리카드 MILE&POINT": {
+    "source_card_id": "2898",
+    "tier_mins": [
+      500000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 2
+  },
+  "우리카드|카드의정석 EVERY MILE SKYPASS": {
+    "source_card_id": "2553",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 1
+  },
+  "신한카드|신한카드 Air One": {
+    "source_card_id": "466",
+    "tier_mins": [
+      500000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 1
+  },
+  "우리카드|우리카드 7CORE": {
+    "source_card_id": "2851",
+    "tier_mins": [
+      500000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 7
+  },
+  "롯데카드|디지로카 Las Vegas": {
+    "source_card_id": "2707",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 2
+  },
+  "우리카드|카드의정석 EVERY DISCOUNT": {
+    "source_card_id": "2719",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 1
+  },
+  "신한카드|신한카드 The CLASSIC-S": {
+    "source_card_id": "945",
+    "tier_mins": [
+      3000000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 2
+  },
+  "신한카드|신한카드 Point Plan": {
+    "source_card_id": "2666",
+    "tier_mins": [
+      400000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": true,
+    "tier_count_total": 4
+  },
+  "하나카드|JADE Classic": {
+    "source_card_id": "2657",
+    "tier_mins": [
+      500000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": true,
+    "tier_count_total": 11
+  },
+  "현대카드|대한항공카드 060": {
+    "source_card_id": "2709",
+    "tier_mins": [
+      500000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 2
+  },
+  "신한카드|메리어트 본보이™ 더 베스트 신한카드": {
+    "source_card_id": "716",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 2
+  },
+  "IBK기업은행|K-패스 (신용)": {
+    "source_card_id": "2559",
+    "tier_mins": [
+      200000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 6
+  },
+  "현대카드|대한항공카드 the First Edition2": {
+    "source_card_id": "2712",
+    "tier_mins": [
+      500000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 3
+  },
+  "현대카드|the Orange": {
+    "source_card_id": "2944",
+    "tier_mins": [
+      500000,
+      1000000
+    ],
+    "tier_maxes": [
+      null,
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 6
+  },
+  "우리카드|the OPUS silver": {
+    "source_card_id": "2902",
+    "tier_mins": [
+      500000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 9
+  },
+  "NH농협카드|zgm.streaming카드": {
+    "source_card_id": "2428",
+    "tier_mins": [
+      10000,
+      400000
+    ],
+    "tier_maxes": [
+      null,
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 4
+  },
+  "현대카드|에너지플러스 현대카드": {
+    "source_card_id": "2942",
+    "tier_mins": [
+      400000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 3
+  },
+  "하나카드|토스뱅크 하나카드 Day": {
+    "source_card_id": "2904",
+    "tier_mins": [
+      500000,
+      1000000
+    ],
+    "tier_maxes": [
+      null,
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 2
+  },
+  "삼성카드|THE iD. 1st": {
+    "source_card_id": "2915",
+    "tier_mins": [
+      500000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 9
+  },
+  "현대카드|대한항공카드 120": {
+    "source_card_id": "2710",
+    "tier_mins": [
+      500000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 2
+  },
+  "NH농협카드|zgm.play카드": {
+    "source_card_id": "2544",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 5
+  },
+  "IBK기업은행|IBK포인트(신용)": {
+    "source_card_id": "2779",
+    "tier_mins": [
+      500000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 1
+  },
+  "우리카드|DA카드의정석Ⅱ": {
+    "source_card_id": "2655",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": true,
+    "tier_count_total": 5
+  },
+  "현대카드|현대카드 Summit": {
+    "source_card_id": "2692",
+    "tier_mins": [
+      500000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 10
+  },
+  "롯데카드|LOCA LIKIT Play": {
+    "source_card_id": "2263",
+    "tier_mins": [
+      400000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 4
+  },
+  "NH농협카드|클래시 트래블카드": {
+    "source_card_id": "2846",
+    "tier_mins": [
+      1000000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": true,
+    "tier_count_total": 2
+  },
+  "신한카드|신한카드 Point Plan+": {
+    "source_card_id": "2731",
+    "tier_mins": [
+      400000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 4
+  },
+  "삼성카드|삼성 iD ON 카드": {
+    "source_card_id": "2235",
+    "tier_mins": [
+      300000,
+      600000
+    ],
+    "tier_maxes": [
+      null,
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 3
+  },
+  "현대카드|American Express® Green Card Edition2": {
+    "source_card_id": "2662",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": false,
+    "tier_count_total": 0
+  },
+  "현대카드|현대카드 M": {
+    "source_card_id": "2669",
+    "tier_mins": [
+      500000,
+      1000000
+    ],
+    "tier_maxes": [
+      null,
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 2
+  },
+  "현대카드|현대카드T": {
+    "source_card_id": "2882",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 1
+  },
+  "하나카드|하나 스카이패스 아멕스 플래티늄 카드": {
+    "source_card_id": "2237",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": false,
+    "tier_count_total": 0
+  },
+  "신한카드|신한카드 The BEST-F": {
+    "source_card_id": "37",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 9
+  },
+  "현대카드|현대카드 ZERO Up": {
+    "source_card_id": "2844",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 7
+  },
+  "BC 바로카드|BC 바로 클리어 플러스": {
+    "source_card_id": "2346",
+    "tier_mins": [
+      150000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 8
+  },
+  "NH농협카드|zgm.일본여행중 카드": {
+    "source_card_id": "2593",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 1
+  },
+  "신한카드|Haru(Hoshino Resorts)": {
+    "source_card_id": "2855",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": false,
+    "tier_count_total": 0
+  },
+  "IBK기업은행|IBK포인트3.8(신용)": {
+    "source_card_id": "2778",
+    "tier_mins": [
+      500000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 2
+  },
+  "우리카드|카드의정석 EVERY POINT": {
+    "source_card_id": "2689",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 1
+  },
+  "현대카드|현대카드O": {
+    "source_card_id": "2880",
+    "tier_mins": [
+      400000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 6
+  },
+  "IBK기업은행|I-Mileage (대한항공)": {
+    "source_card_id": "2674",
+    "tier_mins": [
+      500000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 1
+  },
+  "롯데카드|LOCA LIKIT Eat": {
+    "source_card_id": "2262",
+    "tier_mins": [
+      400000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 4
+  },
+  "NH농협카드|zgm.the pay카드": {
+    "source_card_id": "2427",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 1
+  },
+  "우리카드|카드의정석 TEN": {
+    "source_card_id": "2699",
+    "tier_mins": [
+      400000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 4
+  },
+  "KB국민카드|KB NEED Edu카드": {
+    "source_card_id": "2931",
+    "tier_mins": [
+      400000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 2
+  },
+  "롯데카드|디지로카 Paris": {
+    "source_card_id": "2633",
+    "tier_mins": [
+      500000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 3
+  },
+  "하나카드|원더카드 2.0 FREE+": {
+    "source_card_id": "2820",
+    "tier_mins": [
+      400000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 6
+  },
+  "KB국민카드|굿데이올림카드": {
+    "source_card_id": "115",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 18
+  },
+  "삼성카드|네이버페이 taptap": {
+    "source_card_id": "458",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": false,
+    "tier_count_total": 0
+  },
+  "KB국민카드|가온올림카드(실속형)": {
+    "source_card_id": "769",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": true,
+    "tier_count_total": 10
+  },
+  "KB국민카드|HERITAGE Smart [대한항공 마일리지형]": {
+    "source_card_id": "2451",
+    "tier_mins": [
+      500000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 1
+  },
+  "우리카드|카드의정석 I&U+": {
+    "source_card_id": "2688",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": true,
+    "tier_count_total": 4
+  },
+  "IBK기업은행|I-ALL": {
+    "source_card_id": "2482",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 1
+  },
+  "삼성카드|삼성 iD ALL 카드": {
+    "source_card_id": "2234",
+    "tier_mins": [
+      400000,
+      700000
+    ],
+    "tier_maxes": [
+      null,
+      null
+    ],
+    "has_zero_tier": true,
+    "tier_count_total": 4
+  },
+  "KB국민카드|Easy all 티타늄카드": {
+    "source_card_id": "634",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": false,
+    "tier_count_total": 0
+  },
+  "현대카드|현대카드MY BUSINESS M F&B": {
+    "source_card_id": "2938",
+    "tier_mins": [
+      500000,
+      1000000
+    ],
+    "tier_maxes": [
+      null,
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 5
+  },
+  "삼성카드|삼성카드 스페셜마일리지(스카이패스)": {
+    "source_card_id": "54",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 6
+  },
+  "신한카드|K-패스 신한카드": {
+    "source_card_id": "2690",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 2
+  },
+  "신한카드|신한카드 Edu Plan+": {
+    "source_card_id": "2735",
+    "tier_mins": [
+      300000,
+      500000
+    ],
+    "tier_maxes": [
+      null,
+      null
+    ],
+    "has_zero_tier": true,
+    "tier_count_total": 5
+  },
+  "하나카드|트래블로그+(플러스) 신용카드": {
+    "source_card_id": "2961",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 4
+  },
+  "현대카드|네이버 현대카드 Edition2": {
+    "source_card_id": "2794",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": false,
+    "tier_count_total": 0
+  },
+  "KB국민카드|다담카드": {
+    "source_card_id": "121",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 5
+  },
+  "KB국민카드|BeV V카드(스카이패스형)": {
+    "source_card_id": "131",
+    "tier_mins": [
+      500000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 1
+  },
+  "NH농협카드|올바른 NEW HAVE카드": {
+    "source_card_id": "635",
+    "tier_mins": [
+      400000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": true,
+    "tier_count_total": 2
+  },
+  "신한카드|신한카드 RPM+ Platinum#": {
+    "source_card_id": "16",
+    "tier_mins": [
+      500000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 6
+  },
+  "IBK기업은행|BLISS.5 카드(마일리지)": {
+    "source_card_id": "772",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 5
+  },
+  "하나카드|트래블로그 신용카드": {
+    "source_card_id": "2529",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 4
+  },
+  "롯데카드|LOCA LIKIT": {
+    "source_card_id": "2228",
+    "tier_mins": [
+      400000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 5
+  },
+  "신한카드|알리익스프레스 신한카드": {
+    "source_card_id": "2831",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 4
+  },
+  "삼성카드|삼성 iD PLUG-IN 카드": {
+    "source_card_id": "2661",
+    "tier_mins": [
+      400000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 4
+  },
+  "NH농협카드|zgm 할인카드": {
+    "source_card_id": "2706",
+    "tier_mins": [
+      400000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 5
+  },
+  "KB국민카드|KB Youth Club 체크카드": {
+    "source_card_id": "2929",
+    "tier_mins": [
+      200000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 11
+  },
+  "케이뱅크|ONE 체크카드": {
+    "source_card_id": "2749",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": true,
+    "tier_count_total": 11
+  },
+  "KB국민카드|노리2 체크카드(KB Pay)": {
+    "source_card_id": "2422",
+    "tier_mins": [
+      200000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": true,
+    "tier_count_total": 9
+  },
+  "네이버페이|네이버페이 머니카드": {
+    "source_card_id": "2626",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 1
+  },
+  "신한카드|신한카드 SOL트래블 체크": {
+    "source_card_id": "2667",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 2
+  },
+  "하나카드|하나 나라사랑카드": {
+    "source_card_id": "2934",
+    "tier_mins": [
+      100000,
+      200000,
+      300000,
+      500000,
+      1000000
+    ],
+    "tier_maxes": [
+      200000,
+      300000,
+      500000,
+      1000000,
+      null
+    ],
+    "has_zero_tier": true,
+    "tier_count_total": 42
+  },
+  "토스뱅크|토스뱅크 체크카드": {
+    "source_card_id": "2269",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 13
+  },
+  "KB국민카드|트래블러스 체크카드(토심이)": {
+    "source_card_id": "2691",
+    "tier_mins": [
+      200000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 6
+  },
+  "KG 파이낸셜|모빌카드": {
+    "source_card_id": "2321",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 9
+  },
+  "우체국|개이득 체크카드": {
+    "source_card_id": "2519",
+    "tier_mins": [
+      100000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": true,
+    "tier_count_total": 4
+  },
+  "신한카드|신한카드 Deep Dream 체크": {
+    "source_card_id": "281",
+    "tier_mins": [
+      200000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": true,
+    "tier_count_total": 5
+  },
+  "하나카드|네이버페이 머니 하나 체크카드": {
+    "source_card_id": "2432",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": false,
+    "tier_count_total": 0
+  },
+  "신한카드|신한카드 나라사랑카드 체크": {
+    "source_card_id": "2933",
+    "tier_mins": [
+      100000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": true,
+    "tier_count_total": 4
+  },
+  "우리카드|카드의정석 오하CHECK": {
+    "source_card_id": "2570",
+    "tier_mins": [
+      200000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 9
+  },
+  "카카오뱅크|카카오뱅크 프렌즈 체크카드": {
+    "source_card_id": "435",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 3
+  },
+  "하나카드|트래블로그 체크카드": {
+    "source_card_id": "2394",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 1
+  },
+  "KB국민카드|KB 틴업 체크카드": {
+    "source_card_id": "2852",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 6
+  },
+  "KB국민카드|노리체크카드": {
+    "source_card_id": "348",
+    "tier_mins": [
+      10000,
+      20000,
+      30000,
+      200000,
+      300000
+    ],
+    "tier_maxes": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 8
+  },
+  "NH농협카드|K-패스카드(체크)": {
+    "source_card_id": "2561",
+    "tier_mins": [
+      200000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 5
+  },
+  "KB국민카드|노리2 체크카드(Global)": {
+    "source_card_id": "2423",
+    "tier_mins": [
+      200000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": true,
+    "tier_count_total": 9
+  },
+  "NH농협카드|NH20해봄체크카드": {
+    "source_card_id": "362",
+    "tier_mins": [
+      200000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 1
+  },
+  "IBK기업은행|IBK나라사랑카드": {
+    "source_card_id": "2941",
+    "tier_mins": [
+      80000,
+      200000,
+      250000,
+      500000,
+      1000000
+    ],
+    "tier_maxes": [
+      null,
+      null,
+      null,
+      1000000,
+      null
+    ],
+    "has_zero_tier": true,
+    "tier_count_total": 28
+  },
+  "KB국민카드|토심이 첵첵 체크카드": {
+    "source_card_id": "2604",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 8
+  },
+  "우리카드|카드의정석 EVERY CHECK": {
+    "source_card_id": "2552",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 1
+  },
+  "신한카드|카카오페이 신한 체크카드": {
+    "source_card_id": "286",
+    "tier_mins": [
+      300000,
+      500000,
+      700000
+    ],
+    "tier_maxes": [
+      null,
+      null,
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 4
+  },
+  "하나카드|달달 하나 체크카드": {
+    "source_card_id": "2750",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": false,
+    "tier_count_total": 0
+  },
+  "KB국민카드|트래블러스 체크카드": {
+    "source_card_id": "2905",
+    "tier_mins": [
+      200000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 6
+  },
+  "신한카드|신한카드 Hey Young 체크": {
+    "source_card_id": "618",
+    "tier_mins": [
+      200000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 10
+  },
+  "KB국민카드|직장인보너스체크카드": {
+    "source_card_id": "350",
+    "tier_mins": [
+      30000,
+      50000,
+      200000,
+      300000
+    ],
+    "tier_maxes": [
+      100000,
+      100000,
+      null,
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 11
+  },
+  "MG새마을금고|꿀카드": {
+    "source_card_id": "2001",
+    "tier_mins": [
+      200000,
+      300000
+    ],
+    "tier_maxes": [
+      null,
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 4
+  },
+  "NH농협카드|올바른POINT체크카드": {
+    "source_card_id": "360",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 4
+  },
+  "신한카드|K-패스 신한카드 체크": {
+    "source_card_id": "2693",
+    "tier_mins": [
+      200000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 2
+  },
+  "NH농협카드|춘식이달달체크카드": {
+    "source_card_id": "2758",
+    "tier_mins": [
+      200000,
+      300000
+    ],
+    "tier_maxes": [
+      null,
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 11
+  },
+  "현대카드|현대카드M CHECK": {
+    "source_card_id": "407",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 1
+  },
+  "우리카드|위비트래블 체크카드": {
+    "source_card_id": "2700",
+    "tier_mins": [
+      200000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": true,
+    "tier_count_total": 3
+  },
+  "삼성카드|K-패스 삼성체크카드": {
+    "source_card_id": "2563",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 5
+  },
+  "엔에이치엔페이코|PAYCO 포인트 카드": {
+    "source_card_id": "2310",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 4
+  },
+  "KB국민카드|K-패스체크카드": {
+    "source_card_id": "2556",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": false,
+    "tier_count_total": 0
+  },
+  "NH농협카드|라이언 치즈 체크카드": {
+    "source_card_id": "528",
+    "tier_mins": [
+      200000,
+      300000
+    ],
+    "tier_maxes": [
+      null,
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 14
+  },
+  "신한카드|신한카드 Deep Dream 체크(미니언즈)": {
+    "source_card_id": "646",
+    "tier_mins": [
+      200000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": true,
+    "tier_count_total": 5
+  },
+  "KB국민카드|KB국민 기후동행체크카드": {
+    "source_card_id": "2770",
+    "tier_mins": [
+      200000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 2
+  },
+  "신한카드|신한카드 플리 체크(산리오캐릭터즈)": {
+    "source_card_id": "2492",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 3
+  },
+  "NH농협카드|NH트래블리체크카드": {
+    "source_card_id": "2727",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 2
+  },
+  "우리카드|카드의정석 EVERYDAY CHECK": {
+    "source_card_id": "2742",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": true,
+    "tier_count_total": 6
+  },
+  "신한카드|신한카드 하이패스(전용) 체크": {
+    "source_card_id": "391",
+    "tier_mins": [
+      100000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 1
+  },
+  "우체국|우체국 MY-TYPE 체크카드": {
+    "source_card_id": "2976",
+    "tier_mins": [
+      10000,
+      300000,
+      500000
+    ],
+    "tier_maxes": [
+      null,
+      null,
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 24
+  },
+  "삼성카드|삼성체크카드 & CASHBACK": {
+    "source_card_id": "394",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 5
+  },
+  "NH농협카드|NH 무럭이 체크카드": {
+    "source_card_id": "2620",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 2
+  },
+  "MG새마을금고|더나은 체크카드": {
+    "source_card_id": "2601",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 2
+  },
+  "MG새마을금고|카카오페이 체크카드": {
+    "source_card_id": "2094",
+    "tier_mins": [
+      150000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 6
+  },
+  "IBK기업은행|I-Travel(체크)": {
+    "source_card_id": "2866",
+    "tier_mins": [
+      30000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 2
+  },
+  "신한카드|신한카드 처음 체크(냐한남자)": {
+    "source_card_id": "2889",
+    "tier_mins": [
+      100000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 3
+  },
+  "신한카드|신한 후불 기후동행 체크카드": {
+    "source_card_id": "2767",
+    "tier_mins": [
+      200000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 2
+  },
+  "KB국민카드|청춘대로 싱글 체크카드": {
+    "source_card_id": "335",
+    "tier_mins": [
+      300000,
+      500000
+    ],
+    "tier_maxes": [
+      null,
+      null
+    ],
+    "has_zero_tier": true,
+    "tier_count_total": 9
+  },
+  "NH농협카드|올바른 NEW HAVE체크카드": {
+    "source_card_id": "1765",
+    "tier_mins": [
+      200000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": true,
+    "tier_count_total": 2
+  },
+  "우체국|우체국 LUCK-KEY 체크카드": {
+    "source_card_id": "2871",
+    "tier_mins": [
+      10000,
+      100000
+    ],
+    "tier_maxes": [
+      null,
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 5
+  },
+  "케이뱅크|케이뱅크 플러스 체크카드": {
+    "source_card_id": "669",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": true,
+    "tier_count_total": 2
+  },
+  "하나카드|K-패스 하나 체크카드": {
+    "source_card_id": "2682",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 7
+  },
+  "NH농협카드|체크카드": {
+    "source_card_id": "499",
+    "tier_mins": [
+      200000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 3
+  },
+  "우리카드|그랑블루 체크카드": {
+    "source_card_id": "325",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 4
+  },
+  "신한카드|신한카드 SOL트립앤샵 체크": {
+    "source_card_id": "2935",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 2
+  },
+  "NH농협카드|NH올원체크카드": {
+    "source_card_id": "368",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 1
+  },
+  "카카오뱅크|카카오뱅크 스마트 하이패스카드": {
+    "source_card_id": "2910",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 1
+  },
+  "KB국민카드|가온 올포인트 체크카드": {
+    "source_card_id": "454",
+    "tier_mins": [
+      30000,
+      100000
+    ],
+    "tier_maxes": [
+      null,
+      null
+    ],
+    "has_zero_tier": true,
+    "tier_count_total": 9
+  },
+  "신한카드|신한카드 SOL트래블 J체크": {
+    "source_card_id": "2847",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 2
+  },
+  "KB국민카드|스타플러스 체크카드": {
+    "source_card_id": "2588",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 9
+  },
+  "NH농협카드|올리 POINT 체크": {
+    "source_card_id": "676",
+    "tier_mins": [
+      200000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": true,
+    "tier_count_total": 2
+  },
+  "신한카드|신한카드 On 체크(잔망루피)": {
+    "source_card_id": "2379",
+    "tier_mins": [
+      200000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 3
+  },
+  "현대카드|현대카드X CHECK": {
+    "source_card_id": "408",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 1
+  },
+  "IBK기업은행|K-패스(체크)": {
+    "source_card_id": "2562",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 6
+  },
+  "신한카드|신한카드 Hey Young 체크(잔망루피)": {
+    "source_card_id": "2891",
+    "tier_mins": [
+      200000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 10
+  },
+  "우리카드|우리 기후동행카드(체크)": {
+    "source_card_id": "2826",
+    "tier_mins": [
+      250000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 6
+  },
+  "MG새마을금고|라이프핏 체크카드": {
+    "source_card_id": "2860",
+    "tier_mins": [
+      200000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 7
+  },
+  "IBK기업은행|IBK 무직타이거 카드(체크)": {
+    "source_card_id": "1490",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 6
+  },
+  "신한카드|신한카드 주거래 체크": {
+    "source_card_id": "284",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 2
+  },
+  "NH농협카드|기후동행카드(체크)": {
+    "source_card_id": "2773",
+    "tier_mins": [
+      200000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 8
+  },
+  "하나카드|카카오페이 트래블로그 체크카드": {
+    "source_card_id": "2775",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": false,
+    "tier_count_total": 0
+  },
+  "MG새마을금고|더담은 체크카드": {
+    "source_card_id": "2745",
+    "tier_mins": [
+      500000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 6
+  },
+  "신한카드|신한카드 Pick I 체크": {
+    "source_card_id": "2527",
+    "tier_mins": [
+      200000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": true,
+    "tier_count_total": 4
+  },
+  "우체국|영리한 PLUS 체크카드": {
+    "source_card_id": "2227",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 5
+  },
+  "NH농협카드|내일배움체크카드": {
+    "source_card_id": "367",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 4
+  },
+  "하나카드|카카오페이 체크카드": {
+    "source_card_id": "382",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": false,
+    "tier_count_total": 0
+  },
+  "OK캐쉬백|오키카드 H": {
+    "source_card_id": "2900",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 2
+  },
+  "현대카드|현대카드M HYBRID": {
+    "source_card_id": "414",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 1
+  },
+  "우리카드|카드의정석 APT CHECK": {
+    "source_card_id": "545",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 1
+  },
+  "신한카드|신한카드 처음 체크": {
+    "source_card_id": "2887",
+    "tier_mins": [
+      100000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 3
+  },
+  "신한카드|신한카드 Pick I 체크 캐릭터형(한교동)": {
+    "source_card_id": "2893",
+    "tier_mins": [
+      200000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 4
+  },
+  "하나카드|트래블GO 체크카드": {
+    "source_card_id": "2740",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": false,
+    "tier_count_total": 0
+  },
+  "KB국민카드|카카오페이 KB국민 체크카드": {
+    "source_card_id": "332",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": false,
+    "tier_count_total": 0
+  },
+  "우리카드|카드의정석 DON CHECK": {
+    "source_card_id": "2639",
+    "tier_mins": [
+      50000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 4
+  },
+  "KB국민카드|가온체크카드": {
+    "source_card_id": "336",
+    "tier_mins": [
+      100000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 4
+  },
+  "제주은행|부자되세요 더마일리지카드": {
+    "source_card_id": "2170",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 5
+  },
+  "우체국|행복한 체크카드": {
+    "source_card_id": "585",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 7
+  },
+  "IBK기업은행|일상의 기쁨카드(체크)": {
+    "source_card_id": "441",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 7
+  },
+  "KB국민카드|노리2 체크카드(Play)": {
+    "source_card_id": "2550",
+    "tier_mins": [
+      200000,
+      300000
+    ],
+    "tier_maxes": [
+      null,
+      null
+    ],
+    "has_zero_tier": true,
+    "tier_count_total": 11
+  },
+  "카카오뱅크|카카오뱅크 개인사업자 체크카드": {
+    "source_card_id": "2421",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 2
+  },
+  "KB국민카드|스타체크카드": {
+    "source_card_id": "351",
+    "tier_mins": [
+      20000,
+      30000,
+      200000
+    ],
+    "tier_maxes": [
+      null,
+      null,
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 11
+  },
+  "우체국|어디서나 체크카드": {
+    "source_card_id": "571",
+    "tier_mins": [
+      300000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 7
+  },
+  "하나카드|하나 기후동행체크카드": {
+    "source_card_id": "2768",
+    "tier_mins": [
+      100000
+    ],
+    "tier_maxes": [
+      null
+    ],
+    "has_zero_tier": false,
+    "tier_count_total": 3
+  },
+  "NH농협카드|GS리테일 NH농협체크카드": {
+    "source_card_id": "2437",
+    "tier_mins": [],
+    "tier_maxes": [],
+    "has_zero_tier": true,
+    "tier_count_total": 3
+  }
+}
