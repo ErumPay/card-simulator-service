@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: card-simulator-service
+
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+
+  # datasource:
+  #   url: jdbc:mysql://localhost:3308/simulator_db?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+  #   username: root
+  #   password: 1234
+
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3308/simulator_db}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:1234}
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+
+server:
+  port: 8095
+
+aes:
+  secret-key: ${AES_SECRET_KEY:AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=}
+
+simulator:
+  seed:
+    enabled: ${SIMULATOR_SEED_ENABLED:true}
+    # 사용자/카드 시드는 .env 와 동일 위치(프로젝트 루트)의 seed.csv 에서 읽는다.
+    csv-path: ${SIMULATOR_SEED_CSV_PATH:seed.csv}
