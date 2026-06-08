@@ -3,6 +3,8 @@ FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
 COPY build/libs/*-SNAPSHOT.jar app.jar
+COPY seed.csv seed.csv
+COPY tier-thresholds.json tier-thresholds.json
 
 EXPOSE 8095
 

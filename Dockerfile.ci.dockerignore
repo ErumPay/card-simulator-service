@@ -2,3 +2,5 @@
 !build/
 !build/libs/
 !build/libs/*-SNAPSHOT.jar
+!seed.csv
+!tier-thresholds.json
