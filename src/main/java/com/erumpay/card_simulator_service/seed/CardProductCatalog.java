@@ -99,7 +99,7 @@ final class CardProductCatalog {
             new ProductSeed("830500", "카카오페이 KB국민 체크카드"),
             new ProductSeed("830501", "청춘대로 싱글 체크카드"),
             new ProductSeed("830502", "가온체크카드"),
-            new ProductSeed("830503", "노리체크카드"),
+            new ProductSeed("527289", "노리체크카드"),
             new ProductSeed("830504", "직장인보너스체크카드"),
             new ProductSeed("830505", "스타체크카드"),
             new ProductSeed("830506", "가온 올포인트 체크카드"),

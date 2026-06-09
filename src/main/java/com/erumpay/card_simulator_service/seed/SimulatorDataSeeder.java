@@ -379,13 +379,27 @@ public class SimulatorDataSeeder implements CommandLineRunner {
             String key = product.getCardCompany().getDisplayName() + "|" + product.getProductName();
             TierData td = thresholds.get(key);
 
+            // 신규 실물카드(BIN=527289, KB국민카드 노리체크카드) 강제 분기:
+            // 4시나리오 로테이션을 건너뛰고 합계 200,000원으로 고정한다.
+            // normalIdx 를 건드리지 않아 다른 카드의 시나리오 분배에 영향이 없다.
+            boolean realCard527289 = "KB국민카드".equals(product.getCardCompany().getDisplayName())
+                    && "노리체크카드".equals(product.getProductName());
+
             Scenario scenario;
             long minTier;
             long maxTier;
             String note;
             long targetSum;
 
-            if (td == null) {
+            if (realCard527289) {
+                // normalIdx 도 함께 증가시켜 후속 카드의 시나리오 배치를 보존한다.
+                normalIdx++;
+                scenario = Scenario.SUFFICIENT_EDGE;
+                minTier = 200_000L;
+                maxTier = 200_000L;
+                targetSum = 200_000L;
+                note = "실물카드(527289) 강제 합계 200000";
+            } else if (td == null) {
                 // no tier data — default 적용 + 4시나리오 로테이션
                 scenario = rotation[normalIdx++ % rotation.length];
                 minTier = DEFAULT_MIN_THRESHOLD;

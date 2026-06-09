@@ -1,10 +1,18 @@
 package com.erumpay.card_simulator_service.common;
 
+import java.util.Map;
+
 public class IinMapping {
 
     private IinMapping() {}
 
     public enum CardForm { CREDIT, CHECK }
+
+    // 80~89 mockBin 규약 밖의 실물 카드 BIN(앞 6자리) -> 카드사 매핑.
+    // billing-key-service IinMapping 과 동일 내용을 유지해야 한다.
+    private static final Map<String, CardCompany> PROMOTED_BIN_TO_COMPANY = Map.of(
+        "527289", CardCompany.KB
+    );
 
     // mockBin 규약: xx0000~xx0499 = 신용, xx0500~xx0999 = 체크 (CardProductCatalog 일관 적용)
     public static CardForm resolveCardForm(String cardNumber) {
@@ -26,6 +34,12 @@ public class IinMapping {
         String normalized = cardNumber.replaceAll("\\D", "");
         if (normalized.length() < 2) {
             return CardCompany.UNKNOWN;
+        }
+        if (normalized.length() >= 6) {
+            CardCompany promoted = PROMOTED_BIN_TO_COMPANY.get(normalized.substring(0, 6));
+            if (promoted != null) {
+                return promoted;
+            }
         }
         return switch (normalized.substring(0, 2)) {
             case "80" -> CardCompany.SAMSUNG;
